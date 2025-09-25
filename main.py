@@ -11,5 +11,3 @@ for i in range(1,6):
 with open(arquivo, newline="", encoding="utf-8") as csvfile:
     reading = csv.reader(csvfile, delimiter="\t")
     data = list(reading)
-
-print (data[0])
