@@ -9,7 +9,7 @@ def calculate_module(data):
         x = float(row[1])
         y = float(row[2])
         z = float(row[3])
-        mod = (x2 + y2 + z2)**0.5
+        mod = (x**2 + y**2 + z**2)**0.5
         module.append(mod)
     return module
 
