@@ -1,15 +1,15 @@
 import csv
+import os
+import numpy as np
 
-participante = 1
-
-nome_pasta = 'dataset/part' + str(participante)
-
-#print(nome_pasta)
-
-for i in range(1,5):
-    with open(nome_pasta + 'dev' + str(i) + '.csv') as csvfile:
-        reading = csv(('part' + str(participante) + 'dev' + str(i)), delimiter='\t')
-        for row in reading:
-            print(row)
+participante = 0
+nome_pasta = os.path.join("dataset", "part" + str(participante))
 
 
+for i in range(1,6):
+    arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
+with open(arquivo, newline="", encoding="utf-8") as csvfile:
+    reading = csv.reader(csvfile, delimiter="\t")
+    data = list(reading)
+
+print (data[0])
