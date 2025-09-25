@@ -16,12 +16,34 @@ def calculate_modules(data):
         modules[:,  i] = calculate_module(data, [x, x+1, x+2])
     return modules
         
-
-
-def create_boxplot(data, ylabel, xlabel, title="Boxplot"):
-    plt.boxplot(data, labels = xlabel)
-    plt.title(title)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.grid(True)
+def create_boxplot_per_activity(modules, activities, sensor_name):
+    """
+    Cria UM boxplot para UM sensor específico, mostrando todas as atividades
+    
+    Parameters:
+    - modules: array com módulos [acel, giro, mag]
+    - activities: coluna 12 com rótulos das atividades  
+    - sensor_name: nome para o título
+    """
+    unique_activities = np.unique(activities)
+    
+    # Preparar dados: uma lista por atividade
+    boxplot_data = []
+    activity_labels = []
+    
+    for activity in unique_activities:
+        mask = activities == activity
+        activity_data = modules[mask]
+        boxplot_data.append(activity_data)
+        activity_labels.append(f"A{int(activity)}")
+    
+    # Criar o boxplot
+    plt.figure(figsize=(14, 6))
+    plt.boxplot(boxplot_data, labels=activity_labels)
+    plt.title(f'Módulo de {sensor_name} por Atividade')
+    plt.xlabel('Atividades')
+    plt.ylabel(f'Módulo de {sensor_name}')
+    plt.grid(True, alpha=0.3)
+    plt.xticks(rotation=45)
+    plt.tight_layout()
     plt.show()
