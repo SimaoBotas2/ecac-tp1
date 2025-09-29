@@ -36,10 +36,11 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
         activity_data = modules[mask]
         boxplot_data.append(activity_data)
         activity_labels.append(f"A{int(activity)}")
-    
+
+
     # Criar o boxplot
     plt.figure(figsize=(14, 6))
-    plt.boxplot(boxplot_data, labels=activity_labels)
+    bp = plt.boxplot(boxplot_data, labels=activity_labels)
     plt.title(f'Módulo de {sensor_name} por Atividade')
     plt.xlabel('Atividades')
     plt.ylabel(f'Módulo de {sensor_name}')
@@ -47,3 +48,14 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
     plt.xticks(rotation=45)
     plt.tight_layout()
     plt.show()
+    
+    #Outliers
+
+    print("Outliers detectados e densidade (%):")
+    for i, outlier in enumerate(bp["fliers"]):
+        outliers = outlier.get_ydata()
+        n_outliers = len(outliers)
+        n_total = len(boxplot_data[i])
+        densidade = (n_outliers / n_total) * 100 if n_total > 0 else 0
+        print(f"{activity_labels[i]}: {n_outliers} outliers em {n_total} pontos "
+              f"({densidade:.2f}%)")
