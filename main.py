@@ -1,9 +1,9 @@
-import read_data
+import data_treatment
 import boxplot
 
 
 # 1 Get dados em np array
-dados = read_data.get_data(participante=1)
+dados = data_treatment.get_data(participante=1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])

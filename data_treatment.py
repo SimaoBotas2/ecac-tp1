@@ -1,6 +1,7 @@
 import csv
 import os
 import numpy as np
+import math
 
 def get_data(participante=0):
     nome_pasta = os.path.join("dataset", "part" + str(participante))
@@ -16,5 +17,23 @@ def get_data(participante=0):
 
     dados_np = np.array(dados)
     #print(dados_np)
-
     return dados_np
+
+def calculate_media(array):
+    sum = 0
+    for i in array:
+        sum += i
+    media = sum/len(array)
+    return media
+
+def calculate_desvio(array):
+    sum = 0
+    for i in array:
+        sum += i**2
+    media2 = sum/len(array)
+    media = calculate_media(array)
+
+    variancia = media2 - (media**2)
+    desvio = math.sqrt(variancia)
+
+    return desvio
