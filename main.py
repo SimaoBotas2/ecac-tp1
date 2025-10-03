@@ -1,5 +1,6 @@
 import data_treatment
 import boxplot
+import numpy as np
 
 
 # 1 Get dados em np array
@@ -15,4 +16,8 @@ activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
 for x in range(modules.shape[1]):
     boxplot.create_boxplot_per_activity(modules[:, x], activities, labels[x])
+
+#3.4
+k_values = [3,3.5,4]
+data_treatment.plot_outliers(modules,labels,k_values)
 
