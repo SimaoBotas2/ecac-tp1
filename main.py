@@ -14,8 +14,9 @@ activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
 
 # 3. Criar boxplots para cada sensor e detetar outliers
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
-for x in range(modules.shape[1]):
-    boxplot.create_boxplot_per_activity(modules[:, x], activities, labels[x])
+for i, label in enumerate(labels):
+    sensor_data = modules[:, i]
+    #boxplot.create_boxplot_per_activity(sensor_data, activities, label)
 
 #3.4
 k_values = [3,3.5,4]

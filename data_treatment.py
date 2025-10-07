@@ -35,8 +35,8 @@ def calculate_zscores(array, k):
 def plot_outliers(modules, labels, k_values):
     """
     Cria subplots para cada sensor (coluna de modules),
-    mostrando os outliers (vermelho) e valores normais (azul),
-    para vários valores de k (Z-score).
+    mostrando os outliers (vermelho) e valores "normais" (azul),
+    para vários valores de k no cálculo do z-score.
     """
     for i in range(modules.shape[1]):
         sensor_data = modules[:, i]
