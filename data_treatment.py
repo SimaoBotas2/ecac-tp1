@@ -32,23 +32,21 @@ def calculate_zscores(array, k):
 
 
 
-def plot_outliers(modules, labels, k_values):
+def plot_outliers(sensor_info, k_values):
     """
-    Cria subplots para cada sensor (coluna de modules),
-    mostrando os outliers (vermelho) e valores "normais" (azul),
-    para vários valores de k no cálculo do z-score.
+    Cria subplots para cada sensor (cada entrada no dicionário sensor_info),
+    mostrando os outliers (vermelho) e valores normais (azul),
+    para vários valores de k.
     """
-    for i in range(modules.shape[1]):
-        sensor_data = modules[:, i]
+    for label, sensor_data in sensor_info.items():
         n_k = len(k_values)
-
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         if n_k == 1:
             axes = [axes]
 
         for i in range(len(k_values)):
-            ax = axes[i]          # seleciona o subplot correspondente
-            k = k_values[i]       # seleciona o valor de k correspondente
+            ax = axes[i]
+            k = k_values[i]
 
             outliers = calculate_zscores(sensor_data, k)
             is_outlier = np.isin(sensor_data, outliers)
@@ -61,7 +59,7 @@ def plot_outliers(modules, labels, k_values):
                 s=15
             )
 
-            ax.set_title(f"{labels[i]} (k={k})")
+            ax.set_title(f"{label} (k={k})")
             ax.set_xlabel("Amostras")
             ax.grid(True, alpha=0.3)
 
