@@ -31,7 +31,6 @@ def calculate_zscores(array, k):
     return outliers
 
 
-
 def plot_outliers(sensor_info, k_values):
     """
     Cria subplots para cada sensor (cada entrada no dicionário sensor_info),
@@ -48,8 +47,7 @@ def plot_outliers(sensor_info, k_values):
             ax = axes[i]
             k = k_values[i]
 
-
-            # aqui deve dar pra melhorar performance
+            # aqui acho q deve dar pra melhorar performance
             outliers = calculate_zscores(sensor_data, k)
             is_outlier = np.isin(sensor_data, outliers)
 
@@ -68,5 +66,3 @@ def plot_outliers(sensor_info, k_values):
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
-
-
