@@ -44,10 +44,12 @@ def plot_outliers(sensor_info, k_values):
         if n_k == 1:
             axes = [axes]
 
-        for i in range(len(k_values)):
+        for i in range(n_k):
             ax = axes[i]
             k = k_values[i]
 
+
+            # aqui deve dar pra melhorar performance
             outliers = calculate_zscores(sensor_data, k)
             is_outlier = np.isin(sensor_data, outliers)
 
