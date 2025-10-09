@@ -10,12 +10,12 @@ def get_data(participante=0):
     dados = []
     
     # ainda n sei se é só um sensor ou nao
-    for i in range(1, 6):
-        arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
-        with open(arquivo, newline="", encoding="utf-8") as csvfile:
-            reading = csv.reader(csvfile, delimiter=",")
-            data = list(reading)
-            dados.extend(data)  
+    i = 1
+    arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
+    with open(arquivo, newline="", encoding="utf-8") as csvfile:
+        reading = csv.reader(csvfile, delimiter=",")
+        data = list(reading)
+        dados.extend(data)  
 
     dados_np = np.array(dados)
     #print(dados_np)
