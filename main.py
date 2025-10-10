@@ -21,10 +21,10 @@ sensor_info = {
 }
 
 for label, data in sensor_info.items():
-   boxplot.create_boxplot_per_activity(data, activities, label)
+  boxplot.create_boxplot_per_activity(data, activities, label)
 
 
 #3.4
 k_values = [1]
-data_treatment.plot_outliers(sensor_info,k_values)
+data_treatment.plot_outliers_per_activity(sensor_info,activities,k_values)
 

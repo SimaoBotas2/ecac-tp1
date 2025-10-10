@@ -34,12 +34,9 @@ def calculate_zscores(array, k):
     return outliers
 
 
-def plot_outliers(sensor_info, k_values):
-    """
-    Cria subplots para cada sensor (cada entrada no dicionário sensor_info),
-    mostrando os outliers (vermelho) e valores normais (azul),
-    para vários valores de k.
-    """
+def plot_outliers_per_activity(sensor_info, activities, k_values):
+    unique_activities = np.unique(activities)
+    
     for label, sensor_data in sensor_info.items():
         n_k = len(k_values)
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
@@ -50,20 +47,32 @@ def plot_outliers(sensor_info, k_values):
             ax = axes[i]
             k = k_values[i]
 
-            # aqui deve dar pra melhorar performance
-            outliers = calculate_zscores(sensor_data, k)
-            is_outlier = np.isin(sensor_data, outliers)
+            x_positions = []
+            y_values = []
+            colors = []
 
-            ax.scatter(
-                np.arange(len(sensor_data)),
-                sensor_data,
-                c=np.where(is_outlier, 'red', 'blue'),
-                alpha=0.6,
-                s=15
-            )
+            for j, activity in enumerate(unique_activities):
+                mask = activities == activity
+                activity_data = sensor_data[mask]
 
+                outliers = calculate_zscores(activity_data, k)
+                is_outlier = np.isin(activity_data, outliers)
+
+                x_activity = np.full_like(activity_data, j)
+                x_positions.append(x_activity)
+                y_values.append(activity_data)
+                colors.append(np.where(is_outlier, 'red', 'blue'))
+
+            x_positions = np.concatenate(x_positions)
+            y_values = np.concatenate(y_values)
+            colors = np.concatenate(colors)
+
+            ax.scatter(x_positions, y_values, c=colors, alpha=0.6, s=15)
+
+            ax.set_xticks(range(len(unique_activities)))
+            ax.set_xticklabels([f"A{int(a)}" for a in unique_activities])
+            ax.set_xlabel("Atividades")
             ax.set_title(f"{label} (k={k})")
-            ax.set_xlabel("Amostras")
             ax.grid(True, alpha=0.3)
 
         axes[0].set_ylabel("Módulo")
