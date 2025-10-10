@@ -5,20 +5,22 @@ import math
 import matplotlib.pyplot as plt
 
 def get_data(participante=0):
+
+    # mudar isto para modular, participante, sensor, atividade
     nome_pasta = os.path.join("dataset", "part" + str(participante))
 
     dados = []
-    
     # ainda n sei se é só um sensor ou nao
-    for i in range(1, 6):
-        arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
-        with open(arquivo, newline="", encoding="utf-8") as csvfile:
+    # alterar aqui para um for ou o i só para 1 para o numero de sensores
+    i = 1
+    #for i in range(1,6):
+    arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
+    with open(arquivo, newline="", encoding="utf-8") as csvfile:
             reading = csv.reader(csvfile, delimiter=",")
             data = list(reading)
             dados.extend(data)  
 
     dados_np = np.array(dados)
-    #print(dados_np)
     return dados_np
 
 
@@ -47,7 +49,6 @@ def plot_outliers(sensor_info, k_values):
         for i in range(n_k):
             ax = axes[i]
             k = k_values[i]
-
 
             # aqui deve dar pra melhorar performance
             outliers = calculate_zscores(sensor_data, k)

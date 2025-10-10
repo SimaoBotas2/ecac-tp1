@@ -25,6 +25,6 @@ for label, data in sensor_info.items():
 
 
 #3.4
-k_values = [3,3.5,4]
+k_values = [1]
 data_treatment.plot_outliers(sensor_info,k_values)
 

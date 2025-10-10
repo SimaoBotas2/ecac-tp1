@@ -54,7 +54,7 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
     outlier_print = 0 # MUDAR PARA 0 PRA PRINTAR A DENSIDADE
 
     if outlier_print == 0:
-        print("Outliers detectados e densidade (%) do {sensor_name}:")
+        print(f'Outliers detectados e densidade (%) do {sensor_name}:')
         for i, outlier in enumerate(bp["fliers"]):
             outliers = outlier.get_ydata()
             n_outliers = len(outliers)
