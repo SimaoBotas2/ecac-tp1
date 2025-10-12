@@ -9,7 +9,8 @@ import k_means
 
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(sensor=[1,2,3])
+dados_list = [data_treatment.get_data(sensor=s) for s in [1, 2, 3]]
+dados = np.concatenate(dados_list, axis=1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
