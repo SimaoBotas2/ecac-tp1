@@ -9,21 +9,20 @@ import matplotlib.pyplot as plt
 
 def get_data(participante=0, sensor=1):
     """
-    Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
+    Reads CSV data for one or more participants, with an option to filter by sensor.
 
-    Parâmetros
+    Parameters
     ----------
-    participante : int ou list[int], opcional
-        Participante(s) a carregar. Valor 0 por defeito.
-    sensor : int ou list[int], opcional
-        Sensor(es) a carregar. Valor 1 por defeito.
+    participante : int or list[int], optional
+        Participant(s) to load. Default is 0.
+    sensor : int or list[int], optional
+        Sensor(s) to load. Default is 1.
 
-    Retorna
+    Returns
     -------
     numpy.ndarray
-        Array NumPy com os dados combinados dos parâmetros selecionados.
-    """
-
+        NumPy array with the combined data of the selected parameters.
+"""
     #Verificação dos parametros de entrada e troca para uma lista para iteração (poupar código)
 
     if not isinstance(participante,list) :
@@ -58,23 +57,24 @@ def calculate_zscores(array, k):
 
 def plot_outliers_per_activity(sensor_info, activities, k_values):
     """
-    Plota os dados de cada sensor, destacando os outliers por atividade via Z-score.
+    Plots the data of each sensor, highlighting outliers per activity using Z-score.
 
-    Parâmetros:
+    Parameters
     ----------
     sensor_info : dict
-        {nome_sensor: np.array} com os dados de cada sensor.
+        {sensor_name: np.array} containing the data for each sensor.
     activities : array
-        Rótulos das atividades para cada amostra.
+        Activity labels for each sample.
     k_values : list
-        Valores de k para calcular Z-score; cada k gera um subplot.
+        Z-score threshold values; each k generates a separate subplot.
     
-    Notas
+    Notes
     -----
-    - Outliers em vermelho, restantes em azul.
-    - Eixo X mostra as atividades.
-    - Z-score é calculado separadamente por atividade.
-    """
+    - Outliers are shown in red, normal points in blue.
+    - X-axis shows the activities.
+    - Z-score is calculated separately for each activity.
+"""
+
     activities = np.array(activities)
     unique_activities = np.unique(activities)
     
