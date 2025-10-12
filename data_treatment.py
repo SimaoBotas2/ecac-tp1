@@ -4,21 +4,40 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-def get_data(participante=0):
+def get_data(participante=0, sensor=1):
+    """
+    Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
 
-    # mudar isto para modular, participante, sensor, atividade
-    nome_pasta = os.path.join("dataset", "part" + str(participante))
+    Parâmetros
+    ----------
+    participante : int ou list[int], opcional
+        Participante(s) a carregar. Valor 0 por defeito.
+    sensor : int ou list[int], opcional
+        Sensor(es) a carregar. Valor 1 por defeito.
 
-    dados = []
-    # ainda n sei se é só um sensor ou nao
-    # alterar aqui para um for ou o i só para 1 para o numero de sensores
-    i = 1
-    #for i in range(1,6):
-    arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
-    with open(arquivo, newline="", encoding="utf-8") as csvfile:
-            reading = csv.reader(csvfile, delimiter=",")
-            data = list(reading)
-            dados.extend(data)  
+    Retorna
+    -------
+    numpy.ndarray
+        Array NumPy com os dados combinados dos parâmetros selecionados.
+    """
+
+    #Verificação dos parametros de entrada e troca para uma lista para iteração (poupar código)
+
+    if not isinstance(participante,list) :
+            participante = [participante]
+
+    if not isinstance(sensor,list):
+            sensor = [sensor]
+
+    for p in participante:
+        nome_pasta = os.path.join("dataset", "part" + str(p))
+        dados = []
+        for s in sensor:
+            arquivo = os.path.join(nome_pasta, "part" + str(p) + "dev" + str(s) + ".csv")
+            with open(arquivo, newline="", encoding="utf-8") as csvfile:
+                    reading = csv.reader(csvfile, delimiter=",")
+                    data = list(reading)
+                    dados.extend(data)  
 
     dados_np = np.array(dados)
     return dados_np
@@ -34,13 +53,30 @@ def calculate_zscores(array, k):
     return outliers
 
 
-def plot_outliers(sensor_info, k_values):
+def plot_outliers_per_activity(sensor_info, activities, k_values):
     """
-    Cria subplots para cada sensor (cada entrada no dicionário sensor_info),
-    mostrando os outliers (vermelho) e valores normais (azul),
-    para vários valores de k.
+    Plota os dados de cada sensor, destacando os outliers por atividade via Z-score.
+
+    Parâmetros:
+    ----------
+    sensor_info : dict
+        {nome_sensor: np.array} com os dados de cada sensor.
+    activities : array
+        Rótulos das atividades para cada amostra.
+    k_values : list
+        Valores de k para calcular Z-score; cada k gera um subplot.
+    
+    Notas
+    -----
+    - Outliers em vermelho, restantes em azul.
+    - Eixo X mostra as atividades.
+    - Z-score é calculado separadamente por atividade.
     """
+    activities = np.array(activities)
+    unique_activities = np.unique(activities)
+    
     for label, sensor_data in sensor_info.items():
+        print(f"\nSensor: {label}")
         n_k = len(k_values)
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         if n_k == 1:
@@ -50,24 +86,40 @@ def plot_outliers(sensor_info, k_values):
             ax = axes[i]
             k = k_values[i]
 
-            # aqui deve dar pra melhorar performance
-            outliers = calculate_zscores(sensor_data, k)
-            is_outlier = np.isin(sensor_data, outliers)
+            x_positions = []
+            y_values = []
+            colors = []
 
-            ax.scatter(
-                np.arange(len(sensor_data)),
-                sensor_data,
-                c=np.where(is_outlier, 'red', 'blue'),
-                alpha=0.6,
-                s=15
-            )
+            print(f"\nOutliers para K = {k}:")
+            for j, activity in enumerate(unique_activities):
+                mask = activities == activity
+                activity_data = sensor_data[mask]
 
+                outliers = calculate_zscores(activity_data, k)
+                is_outlier = np.isin(activity_data, outliers)
+
+                # Calcular densidade de outliers
+                # TODO talvez guardar a densidade calculada em cada para se poder comparar com o outro método
+                density = (len(outliers) / len(activity_data)) * 100
+                print(f"{len(outliers)} outliers detectados na atividade {int(activity)} ({density:.2f}%)")
+
+                x_activity = np.full_like(activity_data, j)
+                x_positions.append(x_activity)
+                y_values.append(activity_data)
+                colors.append(np.where(is_outlier, 'red', 'blue'))
+
+            x_positions = np.concatenate(x_positions)
+            y_values = np.concatenate(y_values)
+            colors = np.concatenate(colors)
+
+            ax.scatter(x_positions, y_values, c=colors, alpha=0.6, s=15)
+            ax.set_xticks(range(len(unique_activities)))
+            ax.set_xticklabels([f"A{int(a)}" for a in unique_activities])
+            ax.set_xlabel("Atividades")
             ax.set_title(f"{label} (k={k})")
-            ax.set_xlabel("Amostras")
             ax.grid(True, alpha=0.3)
 
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
-
 
