@@ -40,12 +40,12 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
 
     # Criar o boxplot
     plt.figure(figsize=(14, 6))
-    bp = plt.boxplot(boxplot_data, labels=activity_labels)
+    bp = plt.boxplot(boxplot_data, patch_artist=True)
     plt.title(f'Módulo de {sensor_name} por Atividade')
     plt.xlabel('Atividades')
     plt.ylabel(f'Módulo de {sensor_name}')
     plt.grid(True, alpha=0.3)
-    plt.xticks(rotation=45)
+    plt.xticks(ticks=range(1, len(activity_labels)+1), labels=activity_labels, rotation=45)
     plt.tight_layout()
     plt.show()
     
