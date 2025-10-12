@@ -8,11 +8,13 @@ import k_means
   #Simão Tomás Botas Carvalho nº 2021223055
 
 
+#usar estes arrays para chamar a função abaixo
+#CUIDADO
 all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,all_sensors)
+dados = data_treatment.get_data()
 
 print(np.shape(dados))
 
