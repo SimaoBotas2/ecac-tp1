@@ -31,9 +31,10 @@ def get_data(participante=0, sensor=1):
     if not isinstance(sensor,list):
             sensor = [sensor]
 
+    dados = []
+
     for p in participante:
         nome_pasta = os.path.join("dataset", "part" + str(p))
-        dados = []
         for s in sensor:
             arquivo = os.path.join(nome_pasta, "part" + str(p) + "dev" + str(s) + ".csv")
             with open(arquivo, newline="", encoding="utf-8") as csvfile:
