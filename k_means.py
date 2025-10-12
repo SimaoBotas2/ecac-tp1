@@ -3,19 +3,23 @@ import matplotlib.pyplot as plt
 
 DEBUG = True
 
+#3.6
 def k_means_manual(data, k, max_iters=100):
     """
-    Implementação manual do algoritmo k-means
-    
-    Parameters:
-    - data: array numpy com shape (n_amostras, n_features)
-    - k: número de clusters
-    - max_iters: número máximo de iterações
-    
+    Performs K-means clustering on the given dataset using a manual implementation.
+    Args:
+        data (np.ndarray): The input data array of shape (n_samples, n_features).
+        k (int): The number of clusters to form.
+        max_iters (int, optional): Maximum number of iterations for the algorithm. Default is 100.
     Returns:
-    - clusters: array com labels dos clusters para cada ponto
-    - centroids: array com os centróides finais
-    - distances: distâncias de cada ponto ao seu centróide
+        clusters (np.ndarray): Array of shape (n_samples,) with the cluster index assigned to each sample.
+        centroids (np.ndarray): Array of shape (k, n_features) with the final centroid positions.
+        final_distances (np.ndarray): Array of shape (n_samples,) with the distance of each sample to its assigned centroid.
+    Notes:
+        - Centroids are initialized randomly from the data points.
+        - The algorithm iteratively assigns points to the nearest centroid and updates centroids until convergence or max_iters.
+        - If a cluster becomes empty, its centroid remains unchanged.
+        - The function also computes the final distances of each sample to its assigned centroid for outlier detection.
     """
 
     # Inicializar os centroides
@@ -56,8 +60,23 @@ def k_means_manual(data, k, max_iters=100):
     return clusters, centroids, final_distances
 
     
+def detect_outliers_kmeans(distances, threshold_std=2):
+    """
+    Detects outliers in a set of distances using the k-means method.
+    Parameters:
+        distances (array-like): Array of distances to cluster centers.
+        threshold_std (float, optional): Number of standard deviations above the mean to use as the outlier threshold. Default is 2.
+    Returns:
+        numpy.ndarray: Boolean array indicating which distances are considered outliers.
+    """
 
-        
-    
+    mean_distances = np.mean(distances)
+    std = np.std(distances)
+    threshold = mean_distances + std * threshold_std
+
+    outliers = distances > threshold
+    return outliers
+
+
 
 
