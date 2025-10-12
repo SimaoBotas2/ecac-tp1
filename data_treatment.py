@@ -4,21 +4,40 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
-def get_data(participante=0):
+def get_data(participante=0, sensor=1):
+    """
+    Lê dados CSV de um participante, com opção de filtrar por sensor e/ou atividade.
 
-    # mudar isto para modular, participante, sensor, atividade
-    nome_pasta = os.path.join("dataset", "part" + str(participante))
+    Parâmetros
+    ----------
+    participante : int ou list[int], opcional
+        Participante(s) a carregar. Valor 0 por defeito.
+    sensor : int ou list[int], opcional
+        Sensor(es) a carregar. Valor 1 por defeito.
 
-    dados = []
-    # ainda n sei se é só um sensor ou nao
-    # alterar aqui para um for ou o i só para 1 para o numero de sensores
-    i = 1
-    #for i in range(1,6):
-    arquivo = os.path.join(nome_pasta, "part" + str(participante) + "dev" + str(i) + ".csv")
-    with open(arquivo, newline="", encoding="utf-8") as csvfile:
-            reading = csv.reader(csvfile, delimiter=",")
-            data = list(reading)
-            dados.extend(data)  
+    Retorna
+    -------
+    numpy.ndarray
+        Array NumPy com os dados combinados dos parâmetros selecionados.
+    """
+
+    #Verificação dos parametros de entrada e troca para uma lista para iteração (poupar código)
+
+    if not isinstance(participante,list) :
+            participante = [participante]
+
+    if not isinstance(sensor,list):
+            sensor = [sensor]
+
+    for p in participante:
+        nome_pasta = os.path.join("dataset", "part" + str(p))
+        dados = []
+        for s in sensor:
+            arquivo = os.path.join(nome_pasta, "part" + str(p) + "dev" + str(s) + ".csv")
+            with open(arquivo, newline="", encoding="utf-8") as csvfile:
+                    reading = csv.reader(csvfile, delimiter=",")
+                    data = list(reading)
+                    dados.extend(data)  
 
     dados_np = np.array(dados)
     return dados_np
@@ -35,10 +54,12 @@ def calculate_zscores(array, k):
 
 
 def plot_outliers_per_activity(sensor_info, activities, k_values):
+    activities = np.array(activities)
     unique_activities = np.unique(activities)
     
     for label, sensor_data in sensor_info.items():
         n_k = len(k_values)
+        #subplots para os valores de k , se for só um é um plot normal
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         if n_k == 1:
             axes = [axes]
@@ -51,10 +72,13 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
             y_values = []
             colors = []
 
+            #filtrar a data por atividade
             for j, activity in enumerate(unique_activities):
                 mask = activities == activity
                 activity_data = sensor_data[mask]
 
+                #calculo dos outliers através de z score
+                #TODO falta ainda calcular a densidade
                 outliers = calculate_zscores(activity_data, k)
                 is_outlier = np.isin(activity_data, outliers)
 
@@ -78,5 +102,3 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
-
-

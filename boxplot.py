@@ -22,7 +22,7 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
     
     Parameters:
     - modules: array com módulos [acel, giro, mag]
-    - activities: coluna 12 com rótulos das atividades  
+    - activities: coluna 12 com rótulos dasg atividades  
     - sensor_name: nome para o título
     """
     unique_activities = np.unique(activities)
