@@ -4,6 +4,9 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+#Note:
+    #The docstrings in this document were written by AI and altered to each case by us.
+
 def get_data(participante=0, sensor=1):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.

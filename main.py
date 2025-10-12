@@ -3,6 +3,10 @@ import boxplot
 import numpy as np
 import k_means
 
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
 
 # 1 Get dados em np array
 dados = data_treatment.get_data(sensor=[1,2,3])

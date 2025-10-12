@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 DEBUG = True
-#note : String doc made by copilot and slightly modified by me
+#note : docstring made by copilot and slightly modified by me
 
 #3.6
 def k_means_manual(data, k, max_iters=100):
