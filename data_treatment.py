@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 def get_data(participante=0, sensor=1):
     """
-    Lê dados CSV de um participante, com opção de filtrar por sensor e/ou atividade.
+    Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
 
     Parâmetros
     ----------
@@ -54,12 +54,30 @@ def calculate_zscores(array, k):
 
 
 def plot_outliers_per_activity(sensor_info, activities, k_values):
+    """
+    Plota os dados de cada sensor, destacando os outliers por atividade via Z-score.
+
+    Parâmetros:
+    ----------
+    sensor_info : dict
+        {nome_sensor: np.array} com os dados de cada sensor.
+    activities : array
+        Rótulos das atividades para cada amostra.
+    k_values : list
+        Valores de k para calcular Z-score; cada k gera um subplot.
+    
+    Notas
+    -----
+    - Outliers em vermelho, restantes em azul.
+    - Eixo X mostra as atividades.
+    - Z-score é calculado separadamente por atividade.
+    """
     activities = np.array(activities)
     unique_activities = np.unique(activities)
     
     for label, sensor_data in sensor_info.items():
+        print(f"\nSensor: {label}")
         n_k = len(k_values)
-        #subplots para os valores de k , se for só um é um plot normal
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         if n_k == 1:
             axes = [axes]
@@ -72,15 +90,18 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
             y_values = []
             colors = []
 
-            #filtrar a data por atividade
+            print(f"\nOutliers para K = {k}:")
             for j, activity in enumerate(unique_activities):
                 mask = activities == activity
                 activity_data = sensor_data[mask]
 
-                #calculo dos outliers através de z score
-                #TODO falta ainda calcular a densidade
                 outliers = calculate_zscores(activity_data, k)
                 is_outlier = np.isin(activity_data, outliers)
+
+                # Calcular densidade de outliers
+                # TODO talvez guardar a densidade calculada em cada para se poder comparar com o outro método
+                density = (len(outliers) / len(activity_data)) * 100
+                print(f"{len(outliers)} outliers detectados na atividade {int(activity)} ({density:.2f}%)")
 
                 x_activity = np.full_like(activity_data, j)
                 x_positions.append(x_activity)
@@ -92,7 +113,6 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
             colors = np.concatenate(colors)
 
             ax.scatter(x_positions, y_values, c=colors, alpha=0.6, s=15)
-
             ax.set_xticks(range(len(unique_activities)))
             ax.set_xticklabels([f"A{int(a)}" for a in unique_activities])
             ax.set_xlabel("Atividades")
@@ -102,3 +122,4 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
+
