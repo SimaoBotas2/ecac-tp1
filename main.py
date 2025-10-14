@@ -2,6 +2,7 @@ import data_treatment
 import boxplot
 import numpy as np
 import k_means
+import statistic_significance
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -14,9 +15,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data()
-
-print(np.shape(dados))
+dados = data_treatment.get_data(participante=list(range(0, 15)), sensor=[1, 2, 3])  # type: ignore
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
@@ -24,7 +23,7 @@ modules = boxplot.calculate_modules(dados[:, 1:10])
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
 
-# 3. Criar boxplots para cada sensor e detetar outliers
+"""# 3. Criar boxplots para cada sensor e detetar outliers
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
 
 sensor_info = {
@@ -50,4 +49,9 @@ if k_means.DEBUG:
 
 # 3.7 Plot 3D
 k_means.plot_kmeans_results_3d(modules, clusters, centroids, outliers, title=f"K-means com k={k}")
-
+"""
+# 4.1 Análise de significância estatística
+# F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
+# H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
+# p < 0.05 = significativo
+statistic_significance.analyze_statistical_significance(modules, activities)
