@@ -9,19 +9,19 @@ import matplotlib.pyplot as plt
 
 def get_data(participante=0, sensor=1):
     """
-    Reads CSV data for one or more participants, with an option to filter by sensor.
+    Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
 
-    Parameters
+    Parâmetros
     ----------
-    participante : int or list[int], optional
-        Participant(s) to load. Default is 0.
-    sensor : int or list[int], optional
-        Sensor(s) to load. Default is 1.
+    participante : int ou list[int], opcional
+        Participante(s) a carregar. O valor por defeito é 0.
+    sensor : int ou list[int], opcional
+        Sensor(es) a carregar. O valor por defeito é 1.
 
-    Returns
+    Retorna
     -------
     numpy.ndarray
-        NumPy array with the combined data of the selected parameters.
+        Array NumPy com os dados combinados dos parâmetros selecionados.
 """
     #Verificação dos parametros de entrada e troca para uma lista para iteração (poupar código)
 
@@ -31,9 +31,10 @@ def get_data(participante=0, sensor=1):
     if not isinstance(sensor,list):
             sensor = [sensor]
 
+    dados = []
+
     for p in participante:
         nome_pasta = os.path.join("dataset", "part" + str(p))
-        dados = []
         for s in sensor:
             arquivo = os.path.join(nome_pasta, "part" + str(p) + "dev" + str(s) + ".csv")
             with open(arquivo, newline="", encoding="utf-8") as csvfile:
@@ -57,22 +58,22 @@ def calculate_zscores(array, k):
 
 def plot_outliers_per_activity(sensor_info, activities, k_values):
     """
-    Plots the data of each sensor, highlighting outliers per activity using Z-score.
+    Plota os dados de cada sensor, destacando os outliers por atividade usando o Z-score.
 
-    Parameters
+    Parâmetros
     ----------
     sensor_info : dict
-        {sensor_name: np.array} containing the data for each sensor.
+        {nome_sensor: np.array} contendo os dados de cada sensor.
     activities : array
-        Activity labels for each sample.
+        Rótulos das atividades para cada amostra.
     k_values : list
-        Z-score threshold values; each k generates a separate subplot.
+        Valores limite de Z-score; cada valor de k gera um subplot separado.
     
-    Notes
+    Notas
     -----
-    - Outliers are shown in red, normal points in blue.
-    - X-axis shows the activities.
-    - Z-score is calculated separately for each activity.
+    - Os outliers são mostrados a vermelho e os pontos normais a azul.
+    - O eixo X representa as atividades.
+    - O Z-score é calculado separadamente para cada atividade.
 """
 
     activities = np.array(activities)

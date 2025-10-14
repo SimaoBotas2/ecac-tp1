@@ -7,20 +7,32 @@ DEBUG = True
 #3.6
 def k_means_manual(data, k, max_iters=100):
     """
-    Performs K-means clustering on the given dataset using a manual implementation.
-    Args:
-        data (np.ndarray): The input data array of shape (n_samples, n_features).
-        k (int): The number of clusters to form.
-        max_iters (int, optional): Maximum number of iterations for the algorithm. Default is 100.
-    Returns:
-        clusters (np.ndarray): Array of shape (n_samples,) with the cluster index assigned to each sample.
-        centroids (np.ndarray): Array of shape (k, n_features) with the final centroid positions.
-        final_distances (np.ndarray): Array of shape (n_samples,) with the distance of each sample to its assigned centroid.
-    Notes:
-        - Centroids are initialized randomly from the data points.
-        - The algorithm iteratively assigns points to the nearest centroid and updates centroids until convergence or max_iters.
-        - If a cluster becomes empty, its centroid remains unchanged.
-        - The function also computes the final distances of each sample to its assigned centroid for outlier detection.
+    Executa o agrupamento K-means no conjunto de dados fornecido através de uma implementação manual.
+
+    Parâmetros
+    ----------
+    data : np.ndarray
+        Array de entrada com formato (n_amostras, n_características).
+    k : int
+        Número de clusters a formar.
+    max_iters : int, opcional
+        Número máximo de iterações do algoritmo. O valor por defeito é 100.
+
+    Retorna
+    -------
+    clusters : np.ndarray
+        Array com formato (n_amostras,) que indica o índice do cluster atribuído a cada amostra.
+    centroids : np.ndarray
+        Array com formato (k, n_características) contendo as posições finais dos centróides.
+    final_distances : np.ndarray
+        Array com formato (n_amostras,) contendo a distância de cada amostra ao seu centróide atribuído.
+
+    Notas
+    -----
+    - Os centróides são inicializados aleatoriamente a partir dos pontos de dados.
+    - O algoritmo atribui iterativamente os pontos ao centróide mais próximo e atualiza os centróides até convergir ou atingir o número máximo de iterações.
+    - Se um cluster ficar vazio, o seu centróide permanece inalterado.
+    - A função também calcula as distâncias finais de cada amostra ao respetivo centróide, úteis para deteção de outliers.
     """
 
     # Inicializar os centroides
@@ -64,12 +76,19 @@ def k_means_manual(data, k, max_iters=100):
 # 3.7   
 def detect_outliers_kmeans(distances, threshold_std=2):
     """
-    Detects outliers in a set of distances using the k-means method.
-    Parameters:
-        distances (array-like): Array of distances to cluster centers.
-        threshold_std (float, optional): Number of standard deviations above the mean to use as the outlier threshold. Default is 2.
-    Returns:
-        numpy.ndarray: Boolean array indicating which distances are considered outliers.
+    Deteta outliers num conjunto de distâncias utilizando o método k-means.
+
+    Parâmetros
+    ----------
+    distances : array-like
+        Array com as distâncias aos centros dos clusters.
+    threshold_std : float, opcional
+        Número de desvios padrão acima da média a usar como limite para considerar um outlier. O valor por defeito é 2.
+
+    Retorna
+    -------
+    numpy.ndarray
+        Array booleano que indica quais as distâncias consideradas outliers.
     """
 
     mean_distances = np.mean(distances)
@@ -81,25 +100,27 @@ def detect_outliers_kmeans(distances, threshold_std=2):
 
 def plot_kmeans_results_3d(data, clusters, centroids, outliers, title="K-means Clustering"):
     """
-    Plots the results of K-means clustering in a 3D scatter plot, highlighting clusters, centroids, and outliers.
-    Parameters
+    Plota os resultados do agrupamento K-means num gráfico 3D, destacando clusters, centróides e outliers.
+
+    Parâmetros
     ----------
     data : np.ndarray
-        Array of shape (n_samples, 3) containing the data points to plot.
+        Array de forma (n_amostras, 3) contendo os pontos de dados a serem plotados.
     clusters : np.ndarray
-        Array of shape (n_samples,) with cluster labels assigned to each data point.
+        Array de forma (n_amostras,) com os rótulos de cluster atribuídos a cada ponto.
     centroids : np.ndarray
-        Array of shape (n_clusters, 3) containing the coordinates of cluster centroids.
+        Array de forma (n_clusters, 3) contendo as coordenadas dos centróides dos clusters.
     outliers : np.ndarray
-        Boolean array of shape (n_samples,) indicating which data points are considered outliers.
-    title : str, optional
-        Title for the plot (default is "K-means Clustering").
-    Notes
+        Array booleano de forma (n_amostras,) que indica quais pontos de dados são considerados outliers.
+    title : str, opcional
+        Título do gráfico (por defeito é "Agrupamento K-means").
+
+    Notas
     -----
-    - Normal (non-outlier) points are colored by cluster.
-    - Outliers are marked with black 'x'.
-    - Centroids are shown as large yellow stars.
-    - The axes are labeled according to the features: acceleration, gyroscope, and magnetometer.
+    - Os pontos normais (não outliers) são coloridos de acordo com o cluster.
+    - Os outliers são marcados com um 'x' preto.
+    - Os centróides são mostrados como estrelas amarelas grandes.
+    - Os eixos são rotulados conforme as variáveis: aceleração, giroscópio e magnetómetro.
     """
 
     fig = plt.figure(figsize=(12, 8))
