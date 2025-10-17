@@ -3,6 +3,27 @@ import scipy.stats as stats
 import scipy.fft as fft
 from config import DEBUG
 
+def sampling_rate_calculator(dados):
+    timestamps = dados[:, 10].astype(float)
+    timestamps_sec = timestamps / 1000.0
+
+    time_diffs = np.diff(timestamps_sec)
+
+    # Filtrar diferenças razoáveis
+    time_diffs_clean = time_diffs[(time_diffs > 0.005) & (time_diffs < 0.5)]
+
+    if len(time_diffs_clean) > 0:
+        sr_est = 1.0 / np.median(time_diffs_clean)
+        # Arredondar para valor típico
+        rates = [25, 50, 100, 200]
+        detected = int(min(rates, key=lambda x: abs(x - sr_est)))
+        if DEBUG: print(f"Taxa de amostragem detectada: {detected} Hz (estimada {sr_est:.2f} Hz)")
+        return detected
+    else:
+        detected = 50
+        if DEBUG: print(f"Taxa de amostragem detectada: {detected} Hz (valor padrão)")
+        return detected
+
 class FeatureExtractor:
 
     @staticmethod

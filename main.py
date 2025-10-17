@@ -62,15 +62,17 @@ statistic_significance.analyze_statistical_significance(modules, activities)
 """
 
 # 4.2 Extração de features temporais e espectrais
-# 4.2 - Extração de features
+
 # Preparar dados dos sensores
 accel_data = dados[:, 1:4].astype(float)  # Colunas 2-4
 gyro_data = dados[:, 4:7].astype(float)   # Colunas 5-7
 mag_data = dados[:, 7:10].astype(float)   # Colunas 8-10
 
+sr = feature_extractor.sampling_rate_calculator(dados)
+
 # Executar extração de features
 X_features, y_labels, window_info = feature_extractor.extract_features_4_2(
-    accel_data, gyro_data, mag_data, activities, sampling_rate=50
+    accel_data, gyro_data, mag_data, activities, sampling_rate=sr
 )
 
 # Verificar primeiras features
@@ -79,6 +81,13 @@ if len(X_features) > 0:
     print(f"Labels: {y_labels[:10]}...")  # Primeiros 10 labels
     
     # Salvar features para usar nos próximos pontos
-    np.save('features_X.npy', X_features)
-    np.save('features_y.npy', y_labels)
-    print("Features guardadas em 'features_X.npy' e 'features_y.npy'")
+    np.savetxt('features_X.csv', X_features, delimiter=',', fmt='%.6f')
+    np.savetxt('features_y.csv', y_labels, delimiter=',', fmt='%d')
+    print("Features guardadas em 'features_X.csv' e 'features_y.csv'")
+    with open('features_info.txt', 'w') as f:
+      f.write(f"Total janelas: {X_features.shape[0]}\n")
+      f.write(f"Total features por janela: {X_features.shape[1]}\n")
+      f.write(f"Sampling rate: {sr} Hz\n")
+      f.write(f"Window size: {5 * sr} amostras\n")
+    
+    print("Metadados guardados em 'features_info.txt'")
