@@ -1,10 +1,10 @@
 import numpy as np
+from scipy import stats
 
 def analyze_statistical_significance(modules, activities):
     """
     4.1 - Analyzes statistical significance between activities
     """
-    from scipy import stats
     
     unique_activities = np.unique(activities)
     sensor_names = ['Aceleração', 'Giroscópio', 'Magnetómetro']

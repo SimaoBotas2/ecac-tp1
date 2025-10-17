@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from config import DEBUG
 
-DEBUG = True
 #note : docstring made by copilot and slightly modified by me
 
 #3.6
