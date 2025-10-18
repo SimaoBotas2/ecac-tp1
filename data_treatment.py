@@ -5,7 +5,7 @@ import math
 import matplotlib.pyplot as plt
 
 #Note:
-    #The docstrings in this document were written by AI and altered to each case by us.
+    #The docstrings in this document were written by us and refined by AI
 
 def get_data(participante=0, sensor=1):
     """

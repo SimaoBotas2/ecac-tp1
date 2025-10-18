@@ -12,7 +12,7 @@ all_participants = list(range(0, 15))
 all_sensors = [1, 2, 3, 4, 5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(participante=1, sensor=1)  # type: ignore
+dados = data_treatment.get_data(all_participants, sensor=1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
@@ -57,4 +57,4 @@ k_means.plot_kmeans_results_3d(
 )
 
 # 4.1 Análise de significância estatística
-# statistic_significance.analyze_statistical_significance(modules, activities)
+statistic_significance.analyze_statistical_significance(modules, activities)

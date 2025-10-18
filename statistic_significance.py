@@ -1,6 +1,9 @@
 import numpy as np
 from scipy import stats
 
+#Note:
+    #The docstrings in this document were written by us and refined by AI
+
 
 def analyze_statistical_significance(modules, activities):
     """
