@@ -3,13 +3,20 @@ import boxplot
 import numpy as np
 import k_means
 import statistic_significance
+import feature_extractor
+from config import DEBUG
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
 
-# Trabalho Realizado por:
-# Martim Alves Rodrigues da Costa Duarte nº 2021275991
-# Simão Tomás Botas Carvalho nº 2021223055
+if DEBUG:
+    print("DEBUG está ativo")
 
-all_participants = list(range(0, 15))
-all_sensors = [1, 2, 3, 4, 5]
+
+#usar estes arrays para chamar a função abaixo
+#CUIDADO
+all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
+all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
 dados = data_treatment.get_data(1, sensor=1)
@@ -65,5 +72,43 @@ k_means.plot_kmeans_results_3d(
     title="K-means por Atividade"
 )
 
+# 3.7 Plot 3D
+k_means.plot_kmeans_results_3d(modules, clusters, centroids, outliers, title=f"K-means com k={k}")
+
 # 4.1 Análise de significância estatística
-#statistic_significance.analyze_statistical_significance(modules, activities)
+# F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
+# H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
+# p < 0.05 = significativo
+statistic_significance.analyze_statistical_significance(modules, activities)
+"""
+
+# 4.2 Extração de features temporais e espectrais
+
+# Preparar dados dos sensores
+accel_data = dados[:, 1:4].astype(float)  # Colunas 2-4
+gyro_data = dados[:, 4:7].astype(float)   # Colunas 5-7
+mag_data = dados[:, 7:10].astype(float)   # Colunas 8-10
+
+sr = feature_extractor.sampling_rate_calculator(dados)
+
+# Executar extração de features
+X_features, y_labels, window_info = feature_extractor.extract_features_4_2(
+    accel_data, gyro_data, mag_data, activities, sampling_rate=sr
+)
+
+# Verificar primeiras features
+if len(X_features) > 0:
+    print(f"\nPrimeira janela - {X_features.shape[1]} features:")
+    print(f"Labels: {y_labels[:10]}...")  # Primeiros 10 labels
+    
+    # Salvar features para usar nos próximos pontos
+    np.savetxt('features_X.csv', X_features, delimiter=',', fmt='%.6f')
+    np.savetxt('features_y.csv', y_labels, delimiter=',', fmt='%d')
+    print("Features guardadas em 'features_X.csv' e 'features_y.csv'")
+    with open('features_info.txt', 'w') as f:
+      f.write(f"Total janelas: {X_features.shape[0]}\n")
+      f.write(f"Total features por janela: {X_features.shape[1]}\n")
+      f.write(f"Sampling rate: {sr} Hz\n")
+      f.write(f"Window size: {5 * sr} amostras\n")
+    
+    print("Metadados guardados em 'features_info.txt'")
