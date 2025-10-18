@@ -3,6 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+#Note:
+    #The docstrings in this document were written by us and refined by AI
+
+
 ylabel = ["|aceleracao|", "giroscopio", "magnetometro"]
 
 def calculate_module(data, columns):

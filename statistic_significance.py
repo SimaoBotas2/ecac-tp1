@@ -1,10 +1,14 @@
 import numpy as np
+from scipy import stats
+
+#Note:
+    #The docstrings in this document were written by us and refined by AI
+
 
 def analyze_statistical_significance(modules, activities):
     """
     4.1 - Analyzes statistical significance between activities
     """
-    from scipy import stats
     
     unique_activities = np.unique(activities)
     sensor_names = ['Aceleração', 'Giroscópio', 'Magnetómetro']
@@ -23,9 +27,13 @@ def analyze_statistical_significance(modules, activities):
         # Teste de normalidade (Kolmogorov-Smirnov)
         print("Teste de normalidade (K-S):")
         for i, activity in enumerate(unique_activities):
-            stat, p_value = stats.kstest(activity_data[i], 'norm')
+            stat, p_value = stats.kstest(
+            activity_data[i], 
+            'norm', 
+            args=(np.mean(activity_data[i]), np.std(activity_data[i]))
+            )
             normal = "Normal" if p_value > 0.05 else "Não-normal"
-            print(f"  Atividade {activity}: p={p_value:.4f} ({normal})")
+            print(f"  Atividade {activity}: p={p_value} ({normal})")
         
         # Teste ANOVA ou Kruskal-Wallis dependendo da normalidade
         # (Vamos simplificar e fazer ambos para comparar)

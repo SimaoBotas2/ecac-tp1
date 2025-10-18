@@ -1,0 +1,3 @@
+O que o bonus dá? - Se tivermos 100%, não dá nada, se tivermos menos que isso dá uma percentagem igual a uma pergunta.
+A comparação dos dois métodos de cálculo de outliers é só no relatório ou a rodar o código? Só no relatório que vamos fazer a análise detalhada.
+Perguntar os valores dos resultados do teste de Kolmogorov-Smirnov? Os valores parecem corretos, sendo que o teste é bue rigoroso.
