@@ -11,8 +11,31 @@ from config import DEBUG
 
 def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
     """
-    Executa o agrupamento DBSCAN apenas para as amostras correspondentes às atividades indicadas.
+    Aplica DBSCAN a um subconjunto de dados filtrado por atividades específicas.
+
+    Parâmetros
+    ----------
+    data : np.ndarray
+        Dados de entrada (amostras × features).
+    labels : np.ndarray
+        Rótulos das atividades correspondentes a cada amostra.
+    atividades : int ou lista de int
+        Atividades a incluir na filtragem.
+    eps : float, opcional
+        Distância máxima entre pontos vizinhos (default=0.5).
+    min_samples : int, opcional
+        Número mínimo de pontos para formar um cluster (default=5).
+
+    Retorna
+    -------
+    data_filtrada : np.ndarray
+        Subconjunto de dados correspondente às atividades selecionadas.
+    clusters : np.ndarray
+        Labels atribuídos pelo DBSCAN (-1 para outliers).
+    labels_filtrados : np.ndarray
+        Labels originais das amostras filtradas.
     """
+
     if isinstance(atividades, int):
         atividades = [atividades]
 
@@ -33,8 +56,28 @@ def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
 
 def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por Atividade"):
     """
-    Plota os resultados do DBSCAN num gráfico 3D, gerando um plot separado para cada atividade.
+    Plota os resultados do DBSCAN em 3D, criando um gráfico separado para cada atividade.
+
+    Parâmetros
+    ----------
+    data : np.ndarray
+        Dados de entrada (amostras × 3 features), normalmente os módulos dos sensores.
+    clusters : np.ndarray
+        Labels atribuídos pelo DBSCAN (-1 indica outliers).
+    labels : np.ndarray
+        Rótulos originais das atividades.
+    atividades : int ou lista de int
+        Atividades a incluir nos plots.
+    title : str, opcional
+        Título base do gráfico (default="DBSCAN por Atividade").
+
+    Comportamento
+    ------------
+    - Cada atividade gera um gráfico 3D separado.
+    - Cada cluster recebe uma cor distinta; outliers são marcados a preto.
+    - Eixos representam os módulos do acelerómetro, giroscópio e magnetómetro.
     """
+
     if isinstance(atividades, int):
         atividades = [atividades]
 

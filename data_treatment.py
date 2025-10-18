@@ -7,6 +7,39 @@ import matplotlib.pyplot as plt
 #Note:
     #The docstrings in this document were written by us and refined by AI
 
+
+import numpy as np
+
+def normalize_range(X, new_min=0, new_max=1):
+    """
+    Normaliza um array NumPy para o intervalo [new_min, new_max].
+
+    Aplica normalização min–max a cada coluna do array, escalando os valores
+    para o intervalo definido. Colunas com valores constantes são mantidas.
+
+    Parâmetros
+    ----------
+    X : np.ndarray
+        Array de entrada (amostras × variáveis).
+    new_min : float, opcional
+        Valor mínimo desejado. Por defeito é 0.
+    new_max : float, opcional
+        Valor máximo desejado. Por defeito é 1.
+
+    Retorna
+    -------
+    np.ndarray
+        Array normalizado no intervalo [new_min, new_max].
+    """
+    X = np.asarray(X, dtype=float)
+    X_min = X.min(axis=0)
+    X_max = X.max(axis=0)
+    denom = np.where(X_max - X_min == 0, 1, X_max - X_min)
+    X_scaled = (X - X_min) / denom * (new_max - new_min) + new_min
+    return X_scaled
+
+
+
 def get_data(participante=0, sensor=1):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.

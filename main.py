@@ -24,6 +24,7 @@ dados = data_treatment.get_data(1,1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
+modules = data_treatment.normalize_range(modules,0,1)
 
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
@@ -47,7 +48,7 @@ data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
 """
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
-atividades_selecionadas = 1 #mudar aqui o número da atividade a ver, também aceita array
+atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
     data=modules,
     labels=activities,
@@ -71,7 +72,7 @@ k_means.plot_kmeans_results_3d(
 )
 
 #3.7.1 Dbscan (bónus)
-dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas)
+dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas,eps = 0.04)
 
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
