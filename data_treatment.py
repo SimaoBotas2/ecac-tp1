@@ -8,8 +8,6 @@ import matplotlib.pyplot as plt
     #The docstrings in this document were written by us and refined by AI
 
 
-import numpy as np
-
 def normalize_range(X, new_min=0, new_max=1):
     """
     Normaliza um array NumPy para o intervalo [new_min, new_max].
@@ -38,7 +36,16 @@ def normalize_range(X, new_min=0, new_max=1):
     X_scaled = (X - X_min) / denom * (new_max - new_min) + new_min
     return X_scaled
 
+def calculate_module(data, columns):
+    xyz_data = data[:, columns].astype(float)
+    return np.sqrt(np.sum(xyz_data**2, axis=1))
 
+def calculate_modules(data):
+    n_sensors = data.shape[1] // 3
+    modules = np.zeros((data.shape[0], n_sensors))
+    for i, x in enumerate(range(0, data.shape[1], 3)):
+        modules[:,  i] = calculate_module(data, [x, x+1, x+2])
+    return modules
 
 def get_data(participante=0, sensor=1):
     """

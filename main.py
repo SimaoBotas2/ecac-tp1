@@ -23,7 +23,7 @@ all_sensors = [1,2,3,4,5]
 dados = data_treatment.get_data(1,1)
 
 # calcular o módulo dos sensores
-modules = boxplot.calculate_modules(dados[:, 1:10])
+modules = data_treatment.calculate_modules(dados[:, 1:10])
 modules = data_treatment.normalize_range(modules,0,1)
 
 # 2. Extrair atividades (coluna 12)
