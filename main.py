@@ -1,5 +1,6 @@
 import data_treatment
 import boxplot
+import dbscan
 import numpy as np
 import k_means
 import statistic_significance
@@ -19,7 +20,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,all_sensors)
+dados = data_treatment.get_data(1,1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
@@ -35,19 +36,18 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-
+"""
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
-"""
 
 # 3.4 Outliers por sensor e atividade usando o z score
-k_values = [1, 3]
+k_values = [3,3.5,4]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
-
+"""
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
-atividades_selecionadas = [1,2]
+atividades_selecionadas = 1 #mudar aqui o número da atividade a ver, também aceita array
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
     data=modules,
     labels=activities,
@@ -68,9 +68,15 @@ k_means.plot_kmeans_results_3d(
     outliers=outliers,
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
-    title="K-means por Atividade"
 )
 
+#3.7.1 Dbscan (bónus)
+dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas)
+
+dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+
+
+"""
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)

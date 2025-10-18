@@ -2,8 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from config import DEBUG
 
-#note : docstring made by copilot and slightly modified by me
-
 #Note:
     #The docstrings in this document were written by us and refined by AI
 
