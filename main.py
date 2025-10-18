@@ -19,7 +19,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(1, sensor=1)
+dados = data_treatment.get_data(all_participants,all_sensors)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
@@ -41,11 +41,10 @@ for label, data in sensor_info.items():
 
 """
 
-# 3.4 Outliers por sensor e atividade
+# 3.4 Outliers por sensor e atividade usando o z score
 k_values = [1, 3]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
 
-"""
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
 atividades_selecionadas = [1,2]
@@ -72,15 +71,11 @@ k_means.plot_kmeans_results_3d(
     title="K-means por Atividade"
 )
 
-# 3.7 Plot 3D
-k_means.plot_kmeans_results_3d(modules, clusters, centroids, outliers, title=f"K-means com k={k}")
-
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
 # p < 0.05 = significativo
 statistic_significance.analyze_statistical_significance(modules, activities)
-"""
 
 # 4.2 Extração de features temporais e espectrais
 
@@ -112,3 +107,5 @@ if len(X_features) > 0:
       f.write(f"Window size: {5 * sr} amostras\n")
     
     print("Metadados guardados em 'features_info.txt'")
+
+"""
