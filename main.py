@@ -12,7 +12,7 @@ all_participants = list(range(0, 15))
 all_sensors = [1, 2, 3, 4, 5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants, sensor=1)
+dados = data_treatment.get_data(1, sensor=1)
 
 # calcular o módulo dos sensores
 modules = boxplot.calculate_modules(dados[:, 1:10])
@@ -32,15 +32,22 @@ sensor_info = {
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
+"""
+
 # 3.4 Outliers por sensor e atividade
 k_values = [1, 3]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
 
-
+"""
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
-atividades_selecionadas = 1
-modules_filtrados, clusters, centroids, distances = k_means.k_means_manual(modules,activities,atividades_selecionadas,k)
+atividades_selecionadas = [1,2]
+modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
+    data=modules,
+    labels=activities,
+    atividades=atividades_selecionadas,
+    k=k
+)
 
 outliers = k_means.detect_outliers_kmeans(distances, threshold_std=2)
 
@@ -53,8 +60,10 @@ k_means.plot_kmeans_results_3d(
     clusters=clusters,
     centroids=centroids,
     outliers=outliers,
-    title=f"K-means com k={k} - Atividade(s) {atividades_selecionadas}"
+    labels=labels_filtrados,
+    atividades=atividades_selecionadas,
+    title="K-means por Atividade"
 )
 
 # 4.1 Análise de significância estatística
-statistic_significance.analyze_statistical_significance(modules, activities)
+#statistic_significance.analyze_statistical_significance(modules, activities)
