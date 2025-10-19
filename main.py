@@ -20,7 +20,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,1)
+dados = data_treatment.get_data(all_participants,1) #type: ignore
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
@@ -33,7 +33,7 @@ normalizado = False
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
 
-"""
+
 # 3. Criar boxplots para cada sensor e detetar outliers
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
 
@@ -46,14 +46,13 @@ sensor_info = {
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
-"""
+
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
-"""
+
 # para k-means e dbscan
 atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
-"""
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
@@ -125,7 +124,7 @@ if len(X_features) > 0:
       f.write(f"Sampling rate: {sr} Hz\n")
       f.write(f"Window size: {5 * sr} amostras\n")
     
-    print("Metadados guardados em 'features_info.txt'")"""
+    print("Metadados guardados em 'features_info.txt'")
 
 # 4.3 Análise PCA
 X_features = np.loadtxt('features_X.csv', delimiter=',')
