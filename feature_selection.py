@@ -1,12 +1,11 @@
 import numpy as np
-from skfeature.function.similarity_based import fisher_score
+from sklearn.feature_selection import f_classif
 from skrebate import ReliefF
 
 def fisher_score_selection(X, y, top_n=10):
-    scores = fisher_score.fisher_score(X, y)
-    sorted_idx = np.argsort(scores)[::-1]
-    top_idx = sorted_idx[:top_n]
-    return top_idx, scores
+    F, _ = f_classif(X, y) 
+    top_idx = np.argsort(F)[::-1][:top_n]
+    return top_idx, F
 
 def reliefF_selection(X, y, top_n=10, n_neighbors=10):
     relief = ReliefF(n_neighbors=n_neighbors, n_features_to_select=top_n)
