@@ -7,9 +7,6 @@ from config import DEBUG
 
 
 def k_means_manual(data, labels, atividades, k, max_iters=100):
-    """
-    Executa o agrupamento K-means apenas para as amostras correspondentes às atividades indicadas.
-    """
     if isinstance(atividades, int):
         atividades = [atividades]
 
