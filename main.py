@@ -1,5 +1,6 @@
 import data_treatment
 import boxplot
+import dbscan
 import numpy as np
 import k_means
 import statistic_significance
@@ -19,10 +20,15 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(1, sensor=1)
+dados = data_treatment.get_data(all_participants,1)
 
 # calcular o módulo dos sensores
-modules = boxplot.calculate_modules(dados[:, 1:10])
+modules = data_treatment.calculate_modules(dados[:, 1:10])
+#modules = data_treatment.normalize_range(modules,0,1)
+normalizado = False
+
+
+
 
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
@@ -40,15 +46,15 @@ for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
 """
-
-# 3.4 Outliers por sensor e atividade
-k_values = [1, 3]
+# 3.4 Outliers por sensor e atividade usando o z score
+k_values = [3,3.5,4]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
-
+"""
+# para k-means e dbscan
+atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
 """
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
-atividades_selecionadas = [1,2]
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
     data=modules,
     labels=activities,
@@ -69,18 +75,24 @@ k_means.plot_kmeans_results_3d(
     outliers=outliers,
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
-    title="K-means por Atividade"
 )
+"""
+#3.7.1 Dbscan (bónus)
+if normalizado == True:
+    eps = 0.04 #valor que encontrei melhor com os valores normalizados
+else:
+    eps = 3.5
 
-# 3.7 Plot 3D
-k_means.plot_kmeans_results_3d(modules, clusters, centroids, outliers, title=f"K-means com k={k}")
+dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas,eps)
+
+dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+"""
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
 # p < 0.05 = significativo
 statistic_significance.analyze_statistical_significance(modules, activities)
-"""
 
 # 4.2 Extração de features temporais e espectrais
 
@@ -112,3 +124,5 @@ if len(X_features) > 0:
       f.write(f"Window size: {5 * sr} amostras\n")
     
     print("Metadados guardados em 'features_info.txt'")
+
+"""

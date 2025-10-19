@@ -2,16 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from config import DEBUG
 
-#note : docstring made by copilot and slightly modified by me
-
 #Note:
     #The docstrings in this document were written by us and refined by AI
 
 
 def k_means_manual(data, labels, atividades, k, max_iters=100):
-    """
-    Executa o agrupamento K-means apenas para as amostras correspondentes às atividades indicadas.
-    """
     if isinstance(atividades, int):
         atividades = [atividades]
 
