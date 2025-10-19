@@ -7,6 +7,46 @@ import matplotlib.pyplot as plt
 #Note:
     #The docstrings in this document were written by us and refined by AI
 
+
+def normalize_range(X, new_min=0, new_max=1):
+    """
+    Normaliza um array NumPy para o intervalo [new_min, new_max].
+
+    Aplica normalização min–max a cada coluna do array, escalando os valores
+    para o intervalo definido. Colunas com valores constantes são mantidas.
+
+    Parâmetros
+    ----------
+    X : np.ndarray
+        Array de entrada (amostras × variáveis).
+    new_min : float, opcional
+        Valor mínimo desejado. Por defeito é 0.
+    new_max : float, opcional
+        Valor máximo desejado. Por defeito é 1.
+
+    Retorna
+    -------
+    np.ndarray
+        Array normalizado no intervalo [new_min, new_max].
+    """
+    X = np.asarray(X, dtype=float)
+    X_min = X.min(axis=0)
+    X_max = X.max(axis=0)
+    denom = np.where(X_max - X_min == 0, 1, X_max - X_min)
+    X_scaled = (X - X_min) / denom * (new_max - new_min) + new_min
+    return X_scaled
+
+def calculate_module(data, columns):
+    xyz_data = data[:, columns].astype(float)
+    return np.sqrt(np.sum(xyz_data**2, axis=1))
+
+def calculate_modules(data):
+    n_sensors = data.shape[1] // 3
+    modules = np.zeros((data.shape[0], n_sensors))
+    for i, x in enumerate(range(0, data.shape[1], 3)):
+        modules[:,  i] = calculate_module(data, [x, x+1, x+2])
+    return modules
+
 def get_data(participante=0, sensor=1):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
@@ -56,67 +96,68 @@ def calculate_zscores(array, k):
     return outliers
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+
 def plot_outliers_per_activity(sensor_info, activities, k_values):
     """
-    Plota os dados de cada sensor, destacando os outliers por atividade usando o Z-score.
+    Plota dados de cada sensor, destacando outliers por atividade via Z-score.
 
     Parâmetros
     ----------
     sensor_info : dict
-        {nome_sensor: np.array} contendo os dados de cada sensor.
-    activities : array
-        Rótulos das atividades para cada amostra.
-    k_values : list
-        Valores limite de Z-score; cada valor de k gera um subplot separado.
-    
+        {nome_sensor: np.ndarray} com os dados de cada sensor (1D).
+    activities : array-like
+        Rótulos das atividades.
+    k_values : list[float]
+        Limiares de Z-score (cada valor gera um subplot).
+
     Notas
     -----
-    - Os outliers são mostrados a vermelho e os pontos normais a azul.
-    - O eixo X representa as atividades.
-    - O Z-score é calculado separadamente para cada atividade.
-"""
-
-    activities = np.array(activities)
+    - Outliers a vermelho, pontos normais a azul.
+    - Cálculo de Z-score otimizado por atividade.
+    """
+    activities = np.asarray(activities)
     unique_activities = np.unique(activities)
-    
+
     for label, sensor_data in sensor_info.items():
         print(f"\nSensor: {label}")
         n_k = len(k_values)
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
-        if n_k == 1:
-            axes = [axes]
+        axes = np.atleast_1d(axes)
 
-        for i in range(n_k):
+        # Pré-calcula z-scores para cada atividade, para evitar nested loops
+        zscores_by_activity = {}
+        for activity in unique_activities:
+            mask = activities == activity
+            data_act = sensor_data[mask]
+            z = (data_act - np.mean(data_act)) / np.std(data_act)
+            zscores_by_activity[activity] = (mask, data_act, z)
+
+        for i, k in enumerate(k_values):
             ax = axes[i]
-            k = k_values[i]
-
-            x_positions = []
-            y_values = []
-            colors = []
+            x_positions, y_values, colors = [], [], []
 
             print(f"\nOutliers para K = {k}:")
             for j, activity in enumerate(unique_activities):
-                mask = activities == activity
-                activity_data = sensor_data[mask]
+                mask, data_act, z = zscores_by_activity[activity]
 
-                outliers = calculate_zscores(activity_data, k)
-                is_outlier = np.isin(activity_data, outliers)
+                is_outlier = np.abs(z) > k
+                n_outliers = np.sum(is_outlier)
+                density = (n_outliers / len(data_act)) * 100
+                print(f"{n_outliers} outliers na atividade {int(activity)} ({density:.2f}%)")
 
-                # Calcular densidade de outliers
-                # TODO talvez guardar a densidade calculada em cada para se poder comparar com o outro método
-                density = (len(outliers) / len(activity_data)) * 100
-                print(f"{len(outliers)} outliers detectados na atividade {int(activity)} ({density:.2f}%)")
-
-                x_activity = np.full_like(activity_data, j)
-                x_positions.append(x_activity)
-                y_values.append(activity_data)
+                x_positions.append(np.full_like(data_act, j))
+                y_values.append(data_act)
                 colors.append(np.where(is_outlier, 'red', 'blue'))
 
-            x_positions = np.concatenate(x_positions)
-            y_values = np.concatenate(y_values)
-            colors = np.concatenate(colors)
+            ax.scatter(
+                np.concatenate(x_positions),
+                np.concatenate(y_values),
+                c=np.concatenate(colors),
+                alpha=0.6, s=15
+            )
 
-            ax.scatter(x_positions, y_values, c=colors, alpha=0.6, s=15)
             ax.set_xticks(range(len(unique_activities)))
             ax.set_xticklabels([f"A{int(a)}" for a in unique_activities])
             ax.set_xlabel("Atividades")
@@ -126,4 +167,3 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
-
