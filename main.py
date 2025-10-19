@@ -21,7 +21,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,1)
+dados = data_treatment.get_data(1,1)
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
@@ -125,7 +125,7 @@ if len(X_features) > 0:
     
     print("Metadados guardados em 'features_info.txt'")
 
-    
+
 """
 # 4.3 Análise PCA
 X_features = np.loadtxt('features_X.csv', delimiter=',')
@@ -147,6 +147,11 @@ top10_relief, relief_scores = fs.reliefF_selection(X_features, y_labels, top_n=1
 print("Top 10 ReliefF:", top10_relief)
 print("Pesos:", relief_scores[top10_relief])
 
+
 # Comparar resultados
 common = set(top10_fisher).intersection(set(top10_relief))
-print(f"Features em comum entre Fisher e ReliefF: {common}")
+
+if common:
+    print(f"Features em comum entre Fisher e ReliefF: {common}")
+else:
+    print("Não existem features em comum entre Fisher e ReliefF.")
