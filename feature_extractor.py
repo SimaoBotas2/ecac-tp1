@@ -1,6 +1,8 @@
 import numpy as np
 import scipy.stats as stats
 import scipy.fft as fft
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from config import DEBUG
 
 def sampling_rate_calculator(dados):
@@ -148,7 +150,7 @@ class FeatureExtractor:
     
 def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_rate=50):
     """
-    Implementa COMPLETO o ponto 4.2:
+    Implementa o ponto 4.2:
     - Janelas de 5 segundos com 50% overlap
     - Verifica atividades mistas
     - Extrai features para cada janela válida
@@ -233,3 +235,29 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
         print(f"  Atividade {activity}: {count} janelas")
     
     return X, y, window_info
+
+#4.3
+def pca_analysis(X_features, target_variance=0.75):
+    """Faz análise PCA completa""" # Principal Component Analysis
+    
+    # Normalizar
+    scaler = StandardScaler()
+    X_normalized = scaler.fit_transform(X_features) # Normalização das features antes do PCA é crucial para garantir que a variância de cada feature seja considerada igualmente no cálculo das componentes principais.
+    
+    # PCA completo para análise
+    pca_full = PCA()
+    pca_full.fit(X_normalized) # Encontra a melhor combinação linear das features que captura a maior parte da variância nos dados.
+    
+    # Encontrar componentes para variância alvo
+    variancia_acumulada = np.cumsum(pca_full.explained_variance_ratio_) #soma a variância explicada por cada componente principal de forma acumulativa.
+    n_components = np.argmax(variancia_acumulada >= target_variance) + 1 # verifica o primeiro índice onde a variância acumulada atinge ou excede o valor alvo (75% neste caso).
+    
+    # PCA final com componentes certos
+    pca_final = PCA(n_components=n_components)
+    X_pca = pca_final.fit_transform(X_normalized) # Reduz os dados normalizados para o número ótimo de componentes principais.
+    
+    # Resultados
+    print(f"PCA: {X_features.shape[1]} → {n_components} componentes")
+    print(f"Variância explicada: {variancia_acumulada[n_components-1]*100:.2f}%")
+    
+    return X_pca, pca_final, scaler

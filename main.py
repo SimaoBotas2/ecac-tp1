@@ -33,6 +33,7 @@ normalizado = False
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
 
+"""
 # 3. Criar boxplots para cada sensor e detetar outliers
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
 
@@ -94,6 +95,7 @@ dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividad
 # p < 0.05 = significativo
 statistic_significance.analyze_statistical_significance(modules, activities)
 
+
 # 4.2 Extração de features temporais e espectrais
 
 # Preparar dados dos sensores
@@ -123,6 +125,12 @@ if len(X_features) > 0:
       f.write(f"Sampling rate: {sr} Hz\n")
       f.write(f"Window size: {5 * sr} amostras\n")
     
-    print("Metadados guardados em 'features_info.txt'")
+    print("Metadados guardados em 'features_info.txt'")"""
 
-"""
+# 4.3 Análise PCA
+X_features = np.loadtxt('features_X.csv', delimiter=',')
+X_pca, pca_model, scaler = feature_extractor.pca_analysis(X_features, target_variance=0.75)
+
+#Guardar resultados PCA
+np.savetxt('features_X_pca.csv', X_pca, delimiter=',', fmt='%.6f')
+print("Features PCA guardadas em 'features_X_pca.csv'")
