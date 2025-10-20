@@ -4,7 +4,8 @@ import dbscan
 import numpy as np
 import k_means
 import statistic_significance
-import feature_extractor
+import feature_extractor as fe
+import feature_selection as fs
 from config import DEBUG
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -24,15 +25,11 @@ dados = data_treatment.get_data(all_participants,1) #type: ignore
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
-#modules = data_treatment.normalize_range(modules,0,1)
-normalizado = False
-
-
-
+#modules = data_treatment.normalize_range(modules,0,1) #desconmentar ou comentar de acordo com o que se quer
+normalizado = False  #mudar aqui se normalizarmos
 
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
-
 
 # 3. Criar boxplots para cada sensor e detetar outliers
 labels = ["Aceleração", "Giroscópio", "Magnetômetro"]
@@ -42,17 +39,19 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-
+"""
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
-
 
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
 data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
+"""
+
 
 # para k-means e dbscan
 atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
+
 # 3.6 K-means manual por atividade
 k = 4  # número de clusters
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
@@ -76,17 +75,17 @@ k_means.plot_kmeans_results_3d(
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
 )
-"""
+
 #3.7.1 Dbscan (bónus)
 if normalizado == True:
     eps = 0.04 #valor que encontrei melhor com os valores normalizados
 else:
-    eps = 3.5
+    eps = 3.2
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas,eps)
 
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
-"""
+
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
@@ -102,10 +101,10 @@ accel_data = dados[:, 1:4].astype(float)  # Colunas 2-4
 gyro_data = dados[:, 4:7].astype(float)   # Colunas 5-7
 mag_data = dados[:, 7:10].astype(float)   # Colunas 8-10
 
-sr = feature_extractor.sampling_rate_calculator(dados)
+sr = fe.sampling_rate_calculator(dados)
 
 # Executar extração de features
-X_features, y_labels, window_info = feature_extractor.extract_features_4_2(
+X_features, y_labels, window_info = fe.extract_features_4_2(
     accel_data, gyro_data, mag_data, activities, sampling_rate=sr
 )
 
@@ -126,10 +125,33 @@ if len(X_features) > 0:
     
     print("Metadados guardados em 'features_info.txt'")
 
+
+"""
 # 4.3 Análise PCA
 X_features = np.loadtxt('features_X.csv', delimiter=',')
-X_pca, pca_model, scaler = feature_extractor.pca_analysis(X_features, target_variance=0.75)
+X_pca, pca_model, scaler = fe.pca_analysis(X_features, target_variance=0.75)
 
 #Guardar resultados PCA
 np.savetxt('features_X_pca.csv', X_pca, delimiter=',', fmt='%.6f')
 print("Features PCA guardadas em 'features_X_pca.csv'")
+"""
+#4.5
+
+#fisher
+top10_fisher, fisher_scores = fs.fisher_score_selection(X_features, y_labels, top_n=10)
+print("Top 10 Fisher Score:", top10_fisher)
+print("Scores:", fisher_scores[top10_fisher])
+
+# ReliefF
+top10_relief, relief_scores = fs.reliefF_selection(X_features, y_labels, top_n=10, n_neighbors=10)
+print("Top 10 ReliefF:", top10_relief)
+print("Pesos:", relief_scores[top10_relief])
+
+
+# Comparar resultados
+common = set(top10_fisher).intersection(set(top10_relief))
+
+if common:
+    print(f"Features em comum entre Fisher e ReliefF: {common}")
+else:
+    print("Não existem features em comum entre Fisher e ReliefF.")

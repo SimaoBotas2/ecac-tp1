@@ -5,42 +5,73 @@ from config import DEBUG
 #Note:
     #The docstrings in this document were written by us and refined by AI
 
-
 def k_means_manual(data, labels, atividades, k, max_iters=100):
+    """
+    Implementação manual do algoritmo k-means filtrando por atividades específicas.
+    
+    Parameters:
+    - data: array numpy com shape (n_amostras, n_features)
+    - labels: array com labels/classes de cada amostra
+    - atividades: lista ou int com atividades a considerar
+    - k: número de clusters
+    - max_iters: número máximo de iterações
+
+    Returns:
+    - data_filtrada: dados apenas das atividades selecionadas
+    - clusters: labels dos clusters atribuídos
+    - centroids: centróides finais
+    - final_distances: distâncias de cada ponto ao seu centróide
+    - labels_filtrados: labels originais filtrados
+    """
+
+    # Se atividades for um int, transforma numa lista
     if isinstance(atividades, int):
         atividades = [atividades]
 
+    # Criar máscara para filtrar apenas as amostras das atividades selecionadas
     mask = np.isin(labels, atividades)
-    data_filtrada = data[mask]
-    labels_filtrados = labels[mask]
+    data_filtrada = data[mask]        # dados filtrados
+    labels_filtrados = labels[mask]   # labels filtrados
 
+    # calcular o numero de samples que existem no dataset filtrado
     n_samples = data_filtrada.shape[0]
+
+    # escolher indices random para serem os primeiros centroides
     indices = np.random.choice(n_samples, k, replace=False)
+    # Fazer os centroides com os indices
     centroids = data_filtrada[indices]
 
     for _ in range(max_iters):
+        # Cria uma matriz para guardar o valor da distancia para cada cluster
         distances = np.linalg.norm(data_filtrada[:, np.newaxis, :] - centroids[np.newaxis, :, :], axis=2)
+
+        # Diz a que grupo pertence cada ponto (Ex: Linha (ponto 1) vai pelas colunas (clusters) e retorna o indice (cluster) da distancia mais pequena dessa coluna)
         clusters = np.argmin(distances, axis=1)
 
-        new_centroids = np.zeros_like(centroids)
+        # Recalcular centroides
+        new_centroids = np.zeros_like(centroids) # criar uma estrutura igual a anterioe para guardar os clusters novos
         for i in range(k):
-            if np.sum(clusters == i) > 0:
+            if np.sum(clusters == i) > 0: # verificar se o cluster tem pelo menos um ponto associado
                 cluster_points = data_filtrada[clusters == i]
+                # faz a media dos pontos do cluster para alinhar o novo cluster
                 new_centroids[i] = np.mean(cluster_points, axis=0)
             else:
+                # mantem um centroide nulo se o cluester ja estiver vazio
                 new_centroids[i] = centroids[i]
 
+        # Funcao verifica a igualdade de dois arrays dentro de uma pequena margem de erro
         if np.allclose(centroids, new_centroids):
             if DEBUG:
                 print(f"K-means convergiu na iteracao {_}")
             break
 
+        # Atualiza os centroides
         centroids = new_centroids
 
+    # Calcular as distancias finais para detecao de outliers
     final_distances = np.linalg.norm(data_filtrada - centroids[clusters], axis=1)
+
     return data_filtrada, clusters, centroids, final_distances, labels_filtrados
-
-
 
 def detect_outliers_kmeans(distances, threshold_std=2):
     """
