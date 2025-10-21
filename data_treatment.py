@@ -86,20 +86,7 @@ def get_data(participante=0, sensor=1):
     return dados_np
 
 
-def calculate_zscores(array, k):
-    mean = np.mean(array)
-    std = np.std(array)
-
-    z_scores = (array - mean) / std
-    outliers = array[np.abs(z_scores) > k]
-
-    return outliers
-
-
-import numpy as np
-import matplotlib.pyplot as plt
-
-def plot_outliers_per_activity(sensor_info, activities, k_values):
+def plot_outliers_zScore (sensor_info, activities, k_values):
     """
     Plota dados de cada sensor, destacando outliers por atividade via Z-score.
 
@@ -126,13 +113,24 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         axes = np.atleast_1d(axes)
 
-        # Pré-calcula z-scores para cada atividade, para evitar nested loops
+
         zscores_by_activity = {}
         for activity in unique_activities:
-            mask = activities == activity
+            # Seleciona apenas as amostras correspondentes a esta atividade
+            mask = (activities == activity)
             data_act = sensor_data[mask]
-            z = (data_act - np.mean(data_act)) / np.std(data_act)
-            zscores_by_activity[activity] = (mask, data_act, z)
+
+            # Calcula o z-score: mede o quão distante cada valor está da média (em desvios padrão)
+            mean = np.mean(data_act)
+            std = np.std(data_act)
+            z = (data_act - mean) / std
+
+            # Guarda tudo num dicionário para acesso rápido mais tarde
+            zscores_by_activity[activity] = {
+                "mask": mask,
+                "data": data_act,
+                "zscore": z
+            }
 
         for i, k in enumerate(k_values):
             ax = axes[i]
@@ -142,9 +140,9 @@ def plot_outliers_per_activity(sensor_info, activities, k_values):
             for j, activity in enumerate(unique_activities):
                 mask, data_act, z = zscores_by_activity[activity]
 
-                is_outlier = np.abs(z) > k
+                is_outlier = np.abs(z) > k #se está a distancia maior que k, é outlier
                 n_outliers = np.sum(is_outlier)
-                density = (n_outliers / len(data_act)) * 100
+                density = (n_outliers / len(data_act)) * 100 #cálculo da densidade
                 print(f"{n_outliers} outliers na atividade {int(activity)} ({density:.2f}%)")
 
                 x_positions.append(np.full_like(data_act, j))

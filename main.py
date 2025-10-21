@@ -21,12 +21,15 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,1) #type: ignore
+dados = data_treatment.get_data(all_participants,all_sensors) #type: ignore
+
+print("Fim de get data")
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
 #modules = data_treatment.normalize_range(modules,0,1) #desconmentar ou comentar de acordo com o que se quer
 normalizado = False  #mudar aqui se normalizarmos
+
 
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
@@ -39,14 +42,16 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-"""
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
+
+
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
-data_treatment.plot_outliers_per_activity(sensor_info, activities, k_values)
-"""
+data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
+
+
 
 
 # para k-means e dbscan
@@ -126,7 +131,7 @@ if len(X_features) > 0:
     print("Metadados guardados em 'features_info.txt'")
 
 
-"""
+
 # 4.3 Análise PCA
 X_features = np.loadtxt('features_X.csv', delimiter=',')
 X_pca, pca_model, scaler = fe.pca_analysis(X_features, target_variance=0.75)
@@ -134,7 +139,7 @@ X_pca, pca_model, scaler = fe.pca_analysis(X_features, target_variance=0.75)
 #Guardar resultados PCA
 np.savetxt('features_X_pca.csv', X_pca, delimiter=',', fmt='%.6f')
 print("Features PCA guardadas em 'features_X_pca.csv'")
-"""
+
 #4.5
 
 #fisher
