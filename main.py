@@ -14,7 +14,6 @@ from config import DEBUG
 if DEBUG:
     print("DEBUG está ativo")
 
-
 #usar estes arrays para chamar a função abaixo
 #CUIDADO
 all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
@@ -53,14 +52,15 @@ data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
 
 
 
-
-# para k-means e dbscan
+# Para k-means e dbscan
 atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
 
 # 3.6 K-means manual por atividade
+modules_normalizados = data_treatment.normalize_range(modules,0,1)
+
 k = 4  # número de clusters
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
-    data=modules,
+    data=modules_normalizados,
     labels=activities,
     atividades=atividades_selecionadas,
     k=k
@@ -82,14 +82,14 @@ k_means.plot_kmeans_results_3d(
 )
 
 #3.7.1 Dbscan (bónus)
-if normalizado == True:
-    eps = 0.04 #valor que encontrei melhor com os valores normalizados
-else:
-    eps = 3.2
+eps = 0.04
 
-dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules,activities,atividades_selecionadas,eps)
+dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+
+#TODO fazer plots 2d com os outliers destes.
+
 
 
 # 4.1 Análise de significância estatística
@@ -139,6 +139,7 @@ X_pca, pca_model, scaler = fe.pca_analysis(X_features, target_variance=0.75)
 #Guardar resultados PCA
 np.savetxt('features_X_pca.csv', X_pca, delimiter=',', fmt='%.6f')
 print("Features PCA guardadas em 'features_X_pca.csv'")
+
 
 #4.5
 
