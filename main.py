@@ -20,7 +20,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,all_sensors) #type: ignore
+dados = data_treatment.get_data(1,1) #type: ignore
 
 print("Fim de get data")
 
