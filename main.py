@@ -26,9 +26,6 @@ print("Fim de get data")
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
-#modules = data_treatment.normalize_range(modules,0,1) #desconmentar ou comentar de acordo com o que se quer
-normalizado = False  #mudar aqui se normalizarmos
-
 
 # 2. Extrair atividades (coluna 12)
 activities = dados[:, 11].astype(int)  # índice 11 = coluna 12
@@ -45,12 +42,9 @@ for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
 
-
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
 data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
-
-
 
 # Para k-means e dbscan
 atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
