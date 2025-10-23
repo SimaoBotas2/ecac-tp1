@@ -110,8 +110,7 @@ def plot_outliers_zScore(sensor_info, activities, k_values):
     for label, sensor_data in sensor_info.items():
         print(f"\nSensor: {label}")
         
-        sensor_data = np.asarray(sensor_data, dtype=float)  # ← Correção aqui
-        
+        sensor_data = np.asarray(sensor_data, dtype=float) 
         n_k = len(k_values)
         fig, axes = plt.subplots(1, n_k, figsize=(5 * n_k, 4), sharey=True)
         axes = np.atleast_1d(axes)
