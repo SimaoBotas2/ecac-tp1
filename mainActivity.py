@@ -78,7 +78,7 @@ k_means.plot_kmeans_results_3d(
 )
 #Funciona, mas não sei se é bem isto que o stor quer
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
-
+ 
 #3.7.1 Dbscan (bónus)
 eps = 0.04
 
