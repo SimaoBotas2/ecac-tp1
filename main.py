@@ -63,6 +63,7 @@ modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_
 
 outliers = k_means.detect_outliers_kmeans(distances, threshold_std=2)
 
+
 if k_means.DEBUG:
     print(f"Encontrados {np.sum(outliers)} outliers com k={k} nas atividades {atividades_selecionadas}")
 
@@ -75,6 +76,8 @@ k_means.plot_kmeans_results_3d(
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
 )
+#Funciona, mas não sei se é bem isto que o stor quer
+k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
 
 #3.7.1 Dbscan (bónus)
 eps = 0.04
