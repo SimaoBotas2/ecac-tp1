@@ -1,11 +1,10 @@
 import csv
 import os
 import numpy as np
-import math
 import matplotlib.pyplot as plt
 
-#Note:
-    #The docstrings in this document were written by us and refined by AI
+#Nota:
+    #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
 
 
 def normalize_range(X, new_min=0, new_max=1):
@@ -120,6 +119,8 @@ def plot_outliers_zScore(sensor_info, activities, k_values):
             mask = (activities == activity)
             data_act = sensor_data[mask]
 
+            #TODO
+            #cálculo do z-score em si, maybe trocar isto para uma função mm
             mean = np.mean(data_act)
             std = np.std(data_act)
             z = (data_act - mean) / std

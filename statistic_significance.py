@@ -7,9 +7,22 @@ from scipy import stats
 
 def analyze_statistical_significance(modules, activities):
     """
-    4.1 - Analyzes statistical significance between activities
+    Analisa a significância estatística entre atividades usando sensores.
+
+    Parâmetros
+    ----------
+    modules : np.ndarray
+        Dados de sensores (amostras × 3 sensores: Aceleração, Giroscópio, Magnetómetro).
+    activities : np.ndarray
+        Rótulos das atividades correspondentes a cada amostra.
+
+    Retorna
+    -------
+    None
+        Imprime resultados dos testes de normalidade (Kolmogorov-Smirnov), ANOVA e Kruskal-Wallis
+        para cada sensor, indicando se há diferença estatisticamente significativa entre atividades.
     """
-    
+
     unique_activities = np.unique(activities)
     sensor_names = ['Aceleração', 'Giroscópio', 'Magnetómetro']
     

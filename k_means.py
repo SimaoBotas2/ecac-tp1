@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from config import DEBUG
 
-#Note:
-    #The docstrings in this document were written by us and refined by AI
+#Nota:
+    #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
 
 def k_means_manual(data, labels, atividades, k, max_iters=100):
     """

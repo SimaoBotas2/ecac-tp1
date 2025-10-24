@@ -22,7 +22,8 @@ all_sensors = [1,2,3,4,5]
 # 1 Get dados em np array
 dados = data_treatment.get_data(1,1) #type: ignore
 
-print("Fim de get data")
+if DEBUG:
+    print("Fim de get data")
 
 # calcular o módulo dos sensores
 modules = data_treatment.calculate_modules(dados[:, 1:10])
@@ -47,10 +48,10 @@ k_values = [3,3.5,4]
 data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
 
 # Para k-means e dbscan
-atividades_selecionadas = 5 #mudar aqui o número da atividade a ver, também aceita array
+atividades_selecionadas = [2,5] #mudar aqui o número da atividade a ver, também aceita array
+modules_normalizados = data_treatment.normalize_range(modules,0,1)
 
 # 3.6 K-means manual por atividade
-modules_normalizados = data_treatment.normalize_range(modules,0,1)
 
 k = 4  # número de clusters
 modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_means_manual(
@@ -83,8 +84,6 @@ dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_norm
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
 #TODO fazer plots 2d com os outliers destes.
-
-
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)

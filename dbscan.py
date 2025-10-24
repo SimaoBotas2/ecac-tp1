@@ -4,9 +4,8 @@ from sklearn.cluster import DBSCAN
 from config import DEBUG
 
 
-
-#Note:
-    #The docstrings in this document were written by us and refined by AI
+#Nota:
+    #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
 
 
 def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
@@ -36,13 +35,17 @@ def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
         Labels originais das amostras filtradas.
     """
 
+
+    #transformar em array para iterar
     if isinstance(atividades, int):
         atividades = [atividades]
 
+    #criar mascara para as atividades selecionadas
     mask = np.isin(labels, atividades)
     data_filtrada = data[mask]
     labels_filtrados = labels[mask]
 
+    #Usar a implementação do sklearn
     db = DBSCAN(eps=eps, min_samples=min_samples)
     clusters = db.fit_predict(data_filtrada)
 
@@ -84,17 +87,19 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
     colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
 
     for atividade in atividades:
+        #criar mascara das atividades selecionadas
         mask = labels == atividade
         if np.sum(mask) == 0:
             continue
 
+        #aplicar a mascara
         data_atividade = data[mask]
         clusters_atividade = clusters[mask]
 
         fig = plt.figure(figsize=(12, 8))
         ax = fig.add_subplot(111, projection='3d')
 
-        for i, c in enumerate(set(clusters_atividade)):
+        for i, c in enumerate(set(clusters_atividade)): #usar enumerate para garantir a ordem dos clusters (visualização melhor)
             if c == -1:
                 pontos = data_atividade[clusters_atividade == c]
                 ax.scatter(pontos[:, 0], pontos[:, 1], pontos[:, 2],
