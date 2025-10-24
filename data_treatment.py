@@ -128,7 +128,7 @@ def zscore(sensor_data, activities, k):
 
 def plot_outliers_zScore(sensor_info, activities, k_values):
     """
-    Plota dados de sensores, destacando outliers via Z-Score para vários limiares k.
+    Plota dados de sensores, destacando outliers via Z-Score para vários k-values.
 
     Parâmetros
     ----------
