@@ -6,6 +6,7 @@ import k_means
 import statistic_significance
 import feature_extractor as fe
 import feature_selection as fs
+import zscore as z
 from config import DEBUG
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -20,7 +21,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,1) #type: ignore
+dados = data_treatment.get_data(1,2) #type: ignore
 
 if DEBUG:
     print("Fim de get data")
@@ -45,7 +46,7 @@ for label, data in sensor_info.items():
 
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
-data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
+z.plot_outliers_zScore(sensor_info, activities, k_values)
 
 # Para k-means e dbscan
 atividades_selecionadas = [2,5] #mudar aqui o número da atividade a ver, também aceita array
@@ -78,6 +79,9 @@ k_means.plot_kmeans_results_3d(
 )
 #Funciona, mas não sei se é bem isto que o stor quer
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
+
+#TODO fazer plots 2d com os outliers do k means e dbscan
+    #K means ta feito e dbscan nao
  
 #3.7.1 Dbscan (bónus)
 eps = 0.04
@@ -86,7 +90,7 @@ dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_norm
 
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
-#TODO fazer plots 2d com os outliers destes.
+
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
