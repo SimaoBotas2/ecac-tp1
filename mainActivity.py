@@ -49,7 +49,7 @@ k_values = [3,3.5,4]
 z.plot_outliers_zScore(sensor_info, activities, k_values)
 
 # Para k-means e dbscan
-atividades_selecionadas = [2,5] #mudar aqui o número da atividade a ver, também aceita array
+atividades_selecionadas = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #mudar aqui o número da atividade a ver, também aceita array
 modules_normalizados = data_treatment.normalize_range(modules,0,1)
 
 # 3.6 K-means manual por atividade
@@ -84,11 +84,13 @@ k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
     #K means ta feito e dbscan nao
  
 #3.7.1 Dbscan (bónus)
-eps = 0.04
+eps = 0.04 # temos de mudar este valor, rever e melhorar esta situação
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+
+dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
 
 
 

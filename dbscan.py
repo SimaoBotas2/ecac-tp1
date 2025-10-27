@@ -116,3 +116,61 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
         ax.legend()
         plt.tight_layout()
         plt.show()
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_dbscan_outliers(data, clusters, activities):
+    """
+    Plota os resultados do DBSCAN em 2D, mostrando a distância de cada ponto
+    (ou índice) com subplots separados por atividade, destacando outliers em vermelho.
+
+    Parâmetros
+    ----------
+    data : np.ndarray
+        Dados de entrada (amostras × features). Se for multidimensional (>1D),
+        o eixo x representará o índice da amostra.
+    clusters : np.ndarray
+        Labels atribuídos pelo DBSCAN (-1 indica outliers).
+    activities : np.ndarray
+        Labels das atividades correspondentes a cada amostra.
+    """
+    activities = np.asarray(activities)
+    unique_activities = np.unique(activities)
+    n_activities = len(unique_activities)
+    title = "Outliers DBSCAN por Atividade"
+
+    fig, axes = plt.subplots(1, n_activities, figsize=(5 * n_activities, 4), sharey=True)
+    axes = np.atleast_1d(axes)
+
+    for idx, activity in enumerate(unique_activities):
+        ax = axes[idx]
+        mask = activities == activity
+        activity_clusters = clusters[mask]
+        activity_data = data[mask]
+
+        # Determina outliers
+        outliers = activity_clusters == -1
+        normals = ~outliers
+
+        # Se os dados forem multidimensionais, projetamos em 1D só pra visualização
+        if activity_data.ndim > 1:
+            y_vals = np.linalg.norm(activity_data, axis=1)
+        else:
+            y_vals = activity_data
+
+        ax.scatter(np.where(mask)[0][normals], y_vals[normals],
+                   color='blue', alpha=0.6, label='Normal')
+        ax.scatter(np.where(mask)[0][outliers], y_vals[outliers],
+                   color='red', alpha=0.8, label='Outlier')
+
+        ax.set_title(f"Atividade {activity}")
+        ax.set_xlabel("Índice da amostra")
+        if idx == 0:
+            ax.set_ylabel("Magnitude / Distância (proxy)")
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+
+    plt.suptitle(title)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()
