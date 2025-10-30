@@ -41,7 +41,6 @@ def create_boxplot_per_activity(modules, activities, sensor_name):
     plt.xticks(ticks=range(1, len(activity_labels)+1), labels=activity_labels, rotation=45)
     plt.tight_layout()
     plt.show()
-    plt.savefig("boxplot" + sensor_name)
     
     #Outliers e densidade
 

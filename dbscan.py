@@ -117,7 +117,6 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
         ax.legend()
         plt.tight_layout()
         plt.show()
-        plt.savefig("DBSCAN atividade : " + atividade)
 
 def plot_dbscan_outliers(data, clusters, activities):
     """
@@ -178,4 +177,3 @@ def plot_dbscan_outliers(data, clusters, activities):
     plt.suptitle(title)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
-    plt.savefig("DBSCAN OUTLIERS")

@@ -94,4 +94,3 @@ def plot_outliers_zScore(sensor_info, activities, k_values):
         axes[0].set_ylabel("Módulo")
         plt.tight_layout()
         plt.show()
-        plt.savefig("Zscore" + label)

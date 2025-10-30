@@ -142,7 +142,6 @@ def plot_kmeans_results_3d(data, clusters, centroids, outliers, labels, atividad
         ax.legend()
         plt.tight_layout()
         plt.show()
-        plt.savefig("K-MEANS atividade: " + str(atividade))
 
 #teste
 import numpy as np
@@ -199,4 +198,3 @@ def plot_kmeans_outliers(distances, activities, outliers):
     plt.suptitle(title)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
-    plt.savefig("K-means outliers")

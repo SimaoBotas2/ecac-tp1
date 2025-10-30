@@ -41,7 +41,6 @@ sensor_info = {
 }
 
 
-
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
@@ -50,9 +49,13 @@ for label, data in sensor_info.items():
 k_values = [3,3.5,4]
 z.plot_outliers_zScore(sensor_info, activities, k_values)
 
+
+
 # Para k-means e dbscan
 atividades_selecionadas = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #mudar aqui o número da atividade a ver, também aceita array
 modules_normalizados = data_treatment.normalize_range(modules,0,1)
+
+
 
 # 3.6 K-means manual por atividade
 
@@ -91,9 +94,6 @@ dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_norm
 dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
 dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
-
-
-
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
