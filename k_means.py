@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from math import ceil
 from config import DEBUG
 
 #Nota:
@@ -142,3 +143,58 @@ def plot_kmeans_results_3d(data, clusters, centroids, outliers, labels, atividad
         plt.tight_layout()
         plt.show()
 
+#teste
+import numpy as np
+import matplotlib.pyplot as plt
+from math import ceil
+
+def plot_kmeans_outliers(distances, activities, outliers):
+    """
+    Plota as distâncias de cada ponto ao seu centróide, com subplots separados por atividade,
+    destacando outliers em vermelho e pontos normais em azul.
+
+    Parâmetros
+    ----------
+    distances : np.ndarray
+        Distâncias finais dos pontos aos seus centróides (1D).
+    activities : np.ndarray
+        Labels das atividades correspondentes a cada ponto.
+    outliers : np.ndarray
+        Boolean array indicando quais pontos são outliers.
+    """
+    activities = np.asarray(activities)
+    unique_activities = np.unique(activities)
+    n_activities = len(unique_activities)
+    title = "Outliers K-means por Atividade"
+
+    # grade com 2 linhas e colunas suficientes
+    ncols = ceil(n_activities / 2)
+    fig, axes = plt.subplots(2, ncols, figsize=(5 * ncols, 8), sharey=True)
+    axes = np.atleast_1d(axes).flatten()  # garante vetor 1D
+
+    for idx, activity in enumerate(unique_activities):
+        ax = axes[idx]
+        mask = activities == activity
+        activity_distances = distances[mask]
+        activity_outliers = outliers[mask]
+
+        # Pontos normais
+        ax.scatter(np.where(mask)[0][~activity_outliers], activity_distances[~activity_outliers],
+                   color='blue', alpha=0.6, label='Normal')
+        # Outliers
+        ax.scatter(np.where(mask)[0][activity_outliers], activity_distances[activity_outliers],
+                   color='red', alpha=0.8, label='Outlier')
+
+        ax.set_title(f"Atividade {activity}")
+        ax.set_xlabel("Índice da amostra")
+        if idx % ncols == 0:  # só na primeira coluna
+            ax.set_ylabel("Distância ao centróide")
+        ax.grid(True, alpha=0.3)
+        ax.legend()
+
+    for j in range(n_activities, len(axes)):
+        fig.delaxes(axes[j])
+
+    plt.suptitle(title)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.show()

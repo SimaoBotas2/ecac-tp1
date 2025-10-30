@@ -6,6 +6,7 @@ import k_means
 import statistic_significance
 import feature_extractor as fe
 import feature_selection as fs
+import zscore as z
 from config import DEBUG
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -39,17 +40,21 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-"""for label, data in sensor_info.items():
+for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
 
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
-data_treatment.plot_outliers_zScore(sensor_info, activities, k_values)
+z.plot_outliers_zScore(sensor_info, activities, k_values)
+
+
 
 # Para k-means e dbscan
-atividades_selecionadas = [2,5] #mudar aqui o número da atividade a ver, também aceita array
+atividades_selecionadas = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #mudar aqui o número da atividade a ver, também aceita array
 modules_normalizados = data_treatment.normalize_range(modules,0,1)
+
+
 
 # 3.6 K-means manual por atividade
 
@@ -62,6 +67,7 @@ modules_filtrados, clusters, centroids, distances, labels_filtrados = k_means.k_
 )
 
 outliers = k_means.detect_outliers_kmeans(distances, threshold_std=2)
+
 
 if k_means.DEBUG:
     print(f"Encontrados {np.sum(outliers)} outliers com k={k} nas atividades {atividades_selecionadas}")
@@ -76,20 +82,26 @@ k_means.plot_kmeans_results_3d(
     atividades=atividades_selecionadas,
 )
 
+#Funciona, mas não sei se é bem isto que o stor quer
+k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
+ 
 #3.7.1 Dbscan (bónus)
-eps = 0.04
+eps = 0.03 # temos de mudar este valor, rever e melhorar esta situação
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
-dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)"""
+dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
-#TODO fazer plots 2d com os outliers destes.
+dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
 
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
 # p < 0.05 = significativo
-statistic_significance.analyze_statistical_significance(modules, activities)
+
+modules_normalizados = data_treatment.normalize_range(modules)
+
+statistic_significance.analyze_statistical_significance(modules_normalizados, activities)
 
 
 # 4.2 Extração de features temporais e espectrais

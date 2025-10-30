@@ -59,20 +59,3 @@ def reliefF_selection(X, y, top_n=10, n_neighbors=10):
     scores = relief.feature_importances_
     return top_idx, scores
 
-def get_features_by_indices(X, indices):
-    """
-    Retorna um subconjunto de X com base nos índices informados.
-
-    Parâmetros
-    ----------
-    X : array-like
-        Matriz de features.
-    indices : array-like
-        Índices das colunas a manter.
-
-    Retorna
-    -------
-    np.ndarray
-        Submatriz contendo apenas as features selecionadas.
-    """
-    return X[:, indices]
