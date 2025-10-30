@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
+from math import ceil
 from config import DEBUG
 
 
@@ -116,9 +117,7 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
         ax.legend()
         plt.tight_layout()
         plt.show()
-
-import numpy as np
-import matplotlib.pyplot as plt
+        plt.savefig("DBSCAN atividade : " + atividade)
 
 def plot_dbscan_outliers(data, clusters, activities):
     """
@@ -140,8 +139,9 @@ def plot_dbscan_outliers(data, clusters, activities):
     n_activities = len(unique_activities)
     title = "Outliers DBSCAN por Atividade"
 
-    fig, axes = plt.subplots(1, n_activities, figsize=(5 * n_activities, 4), sharey=True)
-    axes = np.atleast_1d(axes)
+    ncols = ceil(n_activities / 2)
+    fig, axes = plt.subplots(2, ncols, figsize=(5 * ncols, 8), sharey=True)
+    axes = np.atleast_1d(axes).flatten()
 
     for idx, activity in enumerate(unique_activities):
         ax = axes[idx]
@@ -159,6 +159,7 @@ def plot_dbscan_outliers(data, clusters, activities):
         else:
             y_vals = activity_data
 
+        # Plot dos pontos
         ax.scatter(np.where(mask)[0][normals], y_vals[normals],
                    color='blue', alpha=0.6, label='Normal')
         ax.scatter(np.where(mask)[0][outliers], y_vals[outliers],
@@ -166,11 +167,15 @@ def plot_dbscan_outliers(data, clusters, activities):
 
         ax.set_title(f"Atividade {activity}")
         ax.set_xlabel("Índice da amostra")
-        if idx == 0:
+        if idx % ncols == 0:
             ax.set_ylabel("Magnitude / Distância (proxy)")
         ax.grid(True, alpha=0.3)
         ax.legend()
 
+    for j in range(n_activities, len(axes)):
+        fig.delaxes(axes[j])
+
     plt.suptitle(title)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
+    plt.savefig("DBSCAN OUTLIERS")

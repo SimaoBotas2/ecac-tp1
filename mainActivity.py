@@ -21,7 +21,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(1,2) #type: ignore
+dados = data_treatment.get_data(all_participants,2) #type: ignore
 
 if DEBUG:
     print("Fim de get data")
@@ -39,6 +39,8 @@ sensor_info = {
     label: modules[:, i]
     for i, label in enumerate(labels)
 }
+
+
 
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
@@ -77,14 +79,12 @@ k_means.plot_kmeans_results_3d(
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
 )
+
 #Funciona, mas não sei se é bem isto que o stor quer
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
-
-#TODO fazer plots 2d com os outliers do k means e dbscan
-    #K means ta feito e dbscan nao
  
 #3.7.1 Dbscan (bónus)
-eps = 0.04 # temos de mudar este valor, rever e melhorar esta situação
+eps = 0.03 # temos de mudar este valor, rever e melhorar esta situação
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
@@ -94,11 +94,15 @@ dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
 
 
 
+
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
 # p < 0.05 = significativo
-statistic_significance.analyze_statistical_significance(modules, activities)
+
+modules_normalizados = data_treatment.normalize_range(modules)
+
+statistic_significance.analyze_statistical_significance(modules_normalizados, activities)
 
 
 # 4.2 Extração de features temporais e espectrais

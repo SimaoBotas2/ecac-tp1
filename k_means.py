@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from math import ceil
 from config import DEBUG
 
 #Nota:
@@ -141,8 +142,13 @@ def plot_kmeans_results_3d(data, clusters, centroids, outliers, labels, atividad
         ax.legend()
         plt.tight_layout()
         plt.show()
+        plt.savefig("K-MEANS atividade: " + str(atividade))
 
 #teste
+import numpy as np
+import matplotlib.pyplot as plt
+from math import ceil
+
 def plot_kmeans_outliers(distances, activities, outliers):
     """
     Plota as distâncias de cada ponto ao seu centróide, com subplots separados por atividade,
@@ -161,9 +167,11 @@ def plot_kmeans_outliers(distances, activities, outliers):
     unique_activities = np.unique(activities)
     n_activities = len(unique_activities)
     title = "Outliers K-means por Atividade"
-    
-    fig, axes = plt.subplots(1, n_activities, figsize=(5 * n_activities, 4), sharey=True)
-    axes = np.atleast_1d(axes)  # garante que seja array mesmo se n_activities=1
+
+    # grade com 2 linhas e colunas suficientes
+    ncols = ceil(n_activities / 2)
+    fig, axes = plt.subplots(2, ncols, figsize=(5 * ncols, 8), sharey=True)
+    axes = np.atleast_1d(axes).flatten()  # garante vetor 1D
 
     for idx, activity in enumerate(unique_activities):
         ax = axes[idx]
@@ -180,12 +188,15 @@ def plot_kmeans_outliers(distances, activities, outliers):
 
         ax.set_title(f"Atividade {activity}")
         ax.set_xlabel("Índice da amostra")
-        if idx == 0:
+        if idx % ncols == 0:  # só na primeira coluna
             ax.set_ylabel("Distância ao centróide")
         ax.grid(True, alpha=0.3)
         ax.legend()
 
+    for j in range(n_activities, len(axes)):
+        fig.delaxes(axes[j])
+
     plt.suptitle(title)
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
-
+    plt.savefig("K-means outliers")
