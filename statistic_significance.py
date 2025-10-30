@@ -51,15 +51,20 @@ def analyze_statistical_significance(modules, activities):
         # Teste ANOVA ou Kruskal-Wallis dependendo da normalidade
         # (Vamos simplificar e fazer ambos para comparar)
         print("\nComparação entre TODAS as atividades:")
-        
-        # ANOVA (para dados normais)
-        f_stat, p_anova = stats.f_oneway(*activity_data)
-        print(f"  ANOVA: F={f_stat:.4f}, p={p_anova:.4f}")
-        
-        # Kruskal-Wallis (para dados não-normais)
-        h_stat, p_kruskal = stats.kruskal(*activity_data)
-        print(f"  Kruskal-Wallis: H={h_stat:.4f}, p={p_kruskal:.4f}")
+
+        if all(stats.kstest(
+            data, 
+            'norm', 
+            args=(np.mean(data), np.std(data))
+            ).pvalue > 0.05 for data in activity_data):
+            # ANOVA (para dados normais)
+            f_stat, p_anova = stats.f_oneway(*activity_data)
+            print(f"  ANOVA: F={f_stat:.4f}, p={p_anova:.4f}")
+        else:
+            # Kruskal-Wallis (para dados não-normais)
+            h_stat, p_kruskal = stats.kruskal(*activity_data)
+            print(f"  Kruskal-Wallis: H={h_stat:.4f}, p={p_kruskal:.4f}")
         
         # Interpretação
-        significant = "SIGNIFICATIVO" if p_anova < 0.05 else "NÃO SIGNIFICATIVO"
+        significant = "SIGNIFICATIVO" if p_kruskal < 0.05 else "NÃO SIGNIFICATIVO"
         print(f"  Resultado: {significant}")

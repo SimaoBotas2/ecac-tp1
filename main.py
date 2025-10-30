@@ -20,7 +20,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(1,1) #type: ignore
+dados = data_treatment.get_data(all_participants,2) #type: ignore
 
 if DEBUG:
     print("Fim de get data")
@@ -39,7 +39,7 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-for label, data in sensor_info.items():
+"""for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
 
@@ -81,7 +81,7 @@ eps = 0.04
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
-dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)"""
 
 #TODO fazer plots 2d com os outliers destes.
 
@@ -151,6 +151,6 @@ print("Pesos:", relief_scores[top10_relief])
 common = set(top10_fisher).intersection(set(top10_relief))
 
 if common:
-    print(f"Features em comum entre Fisher e ReliefF: {common}")
+    print(f"Features em comum entre Fisher e ReliefF: {(common)}")
 else:
     print("Não existem features em comum entre Fisher e ReliefF.")
