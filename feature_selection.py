@@ -2,6 +2,10 @@ import numpy as np
 from sklearn.feature_selection import f_classif
 from skrebate import ReliefF
 
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
 #Nota:
     #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
 

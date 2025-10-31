@@ -3,6 +3,11 @@ import matplotlib.pyplot as plt
 from math import ceil
 from config import DEBUG
 
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
+
 #Nota:
     #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
 

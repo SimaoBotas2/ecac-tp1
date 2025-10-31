@@ -1,5 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
 def zscore(data, k):
     """
     Identifica outliers num array com base no Z-Score.

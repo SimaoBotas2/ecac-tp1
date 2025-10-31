@@ -5,6 +5,11 @@ from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from config import DEBUG
 
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
+
 def sampling_rate_calculator(dados):
     timestamps = dados[:, 10].astype(float)
     timestamps_sec = timestamps / 1000.0
