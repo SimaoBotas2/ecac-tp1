@@ -7,7 +7,7 @@ from config import DEBUG
 
 #Nota:
     #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
-def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
+def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=20):
     """
     Aplica o algoritmo DBSCAN a um subconjunto de dados filtrado por atividades específicas
     e imprime o número e a densidade (%) de outliers por atividade.

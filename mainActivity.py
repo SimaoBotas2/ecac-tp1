@@ -23,7 +23,7 @@ all_sensors = [1,2,3,4,5]
 # 1 Get dados em np array
 dados = data_treatment.get_data(all_participants,2) #type: ignore
 
-if DEBUG:
+if DEBUG:   
     print("Fim de get data")
   
 # calcular o módulo dos sensores
@@ -49,11 +49,12 @@ k_values = [3,3.5,4]
 z.plot_outliers_zScore(sensor_info, activities, k_values)
 """
 
-"""
+
 # Para k-means e dbscan
 atividades_selecionadas = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #mudar aqui o número da atividade a ver, também aceita array
 modules_normalizados = data_treatment.normalize_range(modules,0,1)
 
+"""
 
 
 # 3.6 K-means manual por atividade
@@ -92,15 +93,18 @@ k_means.plot_kmeans_results_3d(
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
 
 
+
 #3.7.1 Dbscan (bónus)
 eps = 0.04
 
 dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_normalizados,activities,atividades_selecionadas,eps)
 
-#dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
+dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
 dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
+
 """
+
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
@@ -112,7 +116,7 @@ modules_normalizados = data_treatment.normalize_range(modules)
 statistic_significance.analyze_statistical_significance(modules_normalizados, activities)
 
 
-"""# 4.2 Extração de features temporais e espectrais
+# 4.2 Extração de features temporais e espectrais
 
 # Preparar dados dos sensores
 accel_data = dados[:, 1:4].astype(float)  # Colunas 2-4
@@ -155,16 +159,30 @@ print("Features PCA guardadas em 'features_X_pca.csv'")
 
 
 #4.5
-
-#fisher
+# Fisher
 top10_fisher, fisher_scores = fs.fisher_score_selection(X_features, y_labels, top_n=10)
-print("Top 10 Fisher Score:", top10_fisher)
-print("Scores:", fisher_scores[top10_fisher])
 
 # ReliefF
 top10_relief, relief_scores = fs.reliefF_selection(X_features, y_labels, top_n=10, n_neighbors=10)
-print("Top 10 ReliefF:", top10_relief)
-print("Pesos:", relief_scores[top10_relief])
+
+
+# 4.6
+# Reconstruir vetor de nomes das features com base numa janela de exemplo
+try:
+    print("\nA reconstruir nomes das features...")
+    window_size = 5 * sr
+    accel_win = accel_data[:window_size]
+    gyro_win = gyro_data[:window_size]
+    mag_win = mag_data[:window_size]
+
+    feat_dict = fe.FeatureExtractor.extract_window_features(accel_win, gyro_win, mag_win, sampling_rate=sr)
+    feature_names = list(feat_dict.keys())
+    print(f"Foram identificadas {len(feature_names)} features nomeadas.")
+
+except Exception as e:
+    print(f"Aviso: não foi possível reconstruir nomes reais das features ({e})")
+    feature_names = [f"f{i}" for i in range(X_features.shape[1])]
+    print("Usados nomes genéricos f0, f1, f2, ...")
 
 
 # Comparar resultados
@@ -173,4 +191,26 @@ common = set(top10_fisher).intersection(set(top10_relief))
 if common:
     print(f"Features em comum entre Fisher e ReliefF: {(common)}")
 else:
-    print("Não existem features em comum entre Fisher e ReliefF.")"""
+    print("Não existem features em comum entre Fisher e ReliefF.")
+
+# === 4.6.1 - OBTENÇÃO E EXEMPLO DAS FEATURES SELECIONADAS ===
+print("\n=== 4.6.1 - Features relativas à seleção ===")
+
+X_fisher = X_features[:, top10_fisher]
+X_relief = X_features[:, top10_relief]
+
+instante = 0
+print(f"\nInstante de exemplo: {instante}")
+print(f"Atividade associada: {int(y_labels[instante])}")
+
+print("\n--- Features selecionadas por Fisher ---")
+for i, idx in enumerate(top10_fisher):
+    nome = feature_names[idx] if idx < len(feature_names) else f"f{idx}"
+    valor = X_fisher[instante, i]
+    print(f"{i+1:2d}. {nome:40s}  valor = {valor:.6f}")
+
+print("\n--- Features selecionadas por ReliefF ---")
+for i, idx in enumerate(top10_relief):
+    nome = feature_names[idx] if idx < len(feature_names) else f"f{idx}"
+    valor = X_relief[instante, i]
+    print(f"{i+1:2d}. {nome:40s}  valor = {valor:.6f}")

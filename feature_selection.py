@@ -59,3 +59,8 @@ def reliefF_selection(X, y, top_n=10, n_neighbors=10):
     scores = relief.feature_importances_
     return top_idx, scores
 
+def print_selection(name, indices, scores, feature_names):
+    print(f"\n{name} - Top {len(indices)} features:")
+    for idx, score in zip(indices, scores[indices]):
+        fname = feature_names[idx] if idx < len(feature_names) else f'f{idx}'
+        print(f"  idx={idx:3d}  name={fname:40s}  weight={score:.6f}")
