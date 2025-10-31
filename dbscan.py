@@ -7,55 +7,59 @@ from config import DEBUG
 
 #Nota:
     #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
-
-
 def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=5):
     """
-    Aplica DBSCAN a um subconjunto de dados filtrado por atividades específicas.
+    Aplica o algoritmo DBSCAN a um subconjunto de dados filtrado por atividades específicas
+    e imprime o número e a densidade (%) de outliers por atividade.
 
     Parâmetros
     ----------
     data : np.ndarray
-        Dados de entrada (amostras × features).
+        Matriz de dados (amostras × features), já normalizada externamente.
     labels : np.ndarray
-        Rótulos das atividades correspondentes a cada amostra.
-    atividades : int ou lista de int
-        Atividades a incluir na filtragem.
+        Vetor de rótulos das atividades correspondentes a cada amostra.
+    atividades : int ou list[int]
+        Atividade(s) a incluir na filtragem.
     eps : float, opcional
-        Distância máxima entre pontos vizinhos (default=0.5).
+        Distância máxima entre pontos vizinhos (default = 0.5).
     min_samples : int, opcional
-        Número mínimo de pontos para formar um cluster (default=5).
+        Número mínimo de pontos para formar um cluster (default = 5).
 
     Retorna
     -------
     data_filtrada : np.ndarray
         Subconjunto de dados correspondente às atividades selecionadas.
     clusters : np.ndarray
-        Labels atribuídos pelo DBSCAN (-1 para outliers).
+        Rótulos atribuídos pelo DBSCAN (-1 indica outliers).
     labels_filtrados : np.ndarray
-        Labels originais das amostras filtradas.
+        Rótulos originais das amostras filtradas.
     """
 
+    # Garantir lista
+    atividades = np.atleast_1d(atividades)
 
-    #transformar em array para iterar
-    if isinstance(atividades, int):
-        atividades = [atividades]
-
-    #criar mascara para as atividades selecionadas
+    # Filtrar dados
     mask = np.isin(labels, atividades)
     data_filtrada = data[mask]
     labels_filtrados = labels[mask]
 
-    #Usar a implementação do sklearn
-    db = DBSCAN(eps=eps, min_samples=min_samples)
+    # Aplicar DBSCAN
+    db = DBSCAN(eps=eps, min_samples=min_samples,algorithm= 'ball_tree',n_jobs=-1)
     clusters = db.fit_predict(data_filtrada)
 
-    if DEBUG:
-        n_clusters = len(set(clusters)) - (1 if -1 in clusters else 0)
-        n_outliers = np.sum(clusters == -1)
-        print("DBSCAN encontrou", n_clusters, "clusters e", n_outliers, "outliers")
+    unique_acts = np.unique(labels_filtrados)
+    print("\nDensidade de outliers por atividade:")
+    for act in unique_acts:
+        mask_act = labels_filtrados == act
+        clusters_act = clusters[mask_act]
+        n_outliers_act = np.sum(clusters_act == -1)
+        n_total_act = len(clusters_act)
+        dens_act = (n_outliers_act / n_total_act) * 100 if n_total_act > 0 else 0
+        print(f"  Atividade {int(act)}: {n_outliers_act} outliers em {n_total_act} pontos "
+              f"({dens_act:.2f}%)")
 
     return data_filtrada, clusters, labels_filtrados
+
 
 
 def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por Atividade"):
