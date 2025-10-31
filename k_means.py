@@ -196,5 +196,40 @@ def plot_kmeans_outliers(distances, activities, outliers):
         fig.delaxes(axes[j])
 
     plt.suptitle(title)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
+
+
+def print_outlier_density_per_activity(labels, outliers, atividades=None):
+    """
+    Imprime a densidade de outliers (em %) por atividade para os resultados do K-means.
+
+    Parâmetros
+    ----------
+    labels : np.ndarray
+        Labels das atividades correspondentes a cada ponto (após filtro aplicado ao K-means).
+    outliers : np.ndarray
+        Array booleano com a marcação de outliers (True = outlier) para cada ponto.
+    atividades : int | list[int] | None
+        Subconjunto de atividades a considerar. Se None, usa todas presentes em `labels`.
+
+    Saída
+    -----
+    Apenas imprime um resumo por atividade no formato:
+      A{atividade}: X outliers em N pontos (Y%)
+    """
+    labels = np.asarray(labels).astype(int)
+    outliers = np.asarray(outliers).astype(bool)
+
+    if atividades is None:
+        atividades = np.unique(labels)
+    elif isinstance(atividades, int):
+        atividades = [atividades]
+
+    print("Outliers detectados e densidade (%) do K-means:")
+    for atividade in atividades:
+        mask = labels == atividade
+        n_total = int(np.sum(mask))
+        n_outliers = int(np.sum(outliers[mask]))
+        density = (n_outliers / n_total) * 100 if n_total > 0 else 0.0
+        print(f"A{int(atividade)}: {n_outliers} outliers em {n_total} pontos ({density:.2f}%)")

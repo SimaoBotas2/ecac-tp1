@@ -21,7 +21,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data([1,2,3],2) #type: ignore
+dados = data_treatment.get_data(all_participants,2) #type: ignore
 
 if DEBUG:
     print("Fim de get data")
@@ -40,16 +40,16 @@ sensor_info = {
     for i, label in enumerate(labels)
 }
 
-for label, data in sensor_info.items():
+"""for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
 
 # 3.4 Outliers por sensor e atividade usando o z score
 k_values = [3,3.5,4]
 z.plot_outliers_zScore(sensor_info, activities, k_values)
+"""
 
-
-
+"""
 # Para k-means e dbscan
 atividades_selecionadas = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16] #mudar aqui o número da atividade a ver, também aceita array
 modules_normalizados = data_treatment.normalize_range(modules,0,1)
@@ -72,6 +72,13 @@ outliers = k_means.detect_outliers_kmeans(distances, threshold_std=2)
 if k_means.DEBUG:
     print(f"Encontrados {np.sum(outliers)} outliers com k={k} nas atividades {atividades_selecionadas}")
 
+# Imprimir densidade de outliers por atividade (semelhante ao boxplot)
+k_means.print_outlier_density_per_activity(
+    labels_filtrados,
+    outliers,
+    atividades=atividades_selecionadas,
+)
+
 # 3.7 Plot 3D K-means por atividade
 k_means.plot_kmeans_results_3d(
     data=modules_filtrados,
@@ -93,7 +100,7 @@ dbscan_data, dbscan_clusters, dbscan_labels = dbscan.dbscan_cluster(modules_norm
 #dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividades_selecionadas)
 
 dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
-
+"""
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
@@ -105,7 +112,7 @@ modules_normalizados = data_treatment.normalize_range(modules)
 statistic_significance.analyze_statistical_significance(modules_normalizados, activities)
 
 
-# 4.2 Extração de features temporais e espectrais
+"""# 4.2 Extração de features temporais e espectrais
 
 # Preparar dados dos sensores
 accel_data = dados[:, 1:4].astype(float)  # Colunas 2-4
@@ -166,4 +173,4 @@ common = set(top10_fisher).intersection(set(top10_relief))
 if common:
     print(f"Features em comum entre Fisher e ReliefF: {(common)}")
 else:
-    print("Não existem features em comum entre Fisher e ReliefF.")
+    print("Não existem features em comum entre Fisher e ReliefF.")"""

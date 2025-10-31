@@ -5,6 +5,18 @@ from scipy import stats
     #The docstrings in this document were written by us and refined by AI
 
 
+def _format_p(p_value: float) -> str:
+    """Formata p-values em notação científica; para underflow (0.0) mostra limite inferior."""
+    try:
+        p = float(p_value)
+    except Exception:
+        return str(p_value)
+    if p <= 0.0:
+        # Mostrar limite inferior representável (valor subnormal mínimo não é prático; usar tiny)
+        return f"< {np.finfo(float).tiny:.0e}"
+    return f"{p:.16e}"
+
+
 def analyze_statistical_significance(modules, activities):
     """
     Analisa a significância estatística entre atividades usando sensores.
@@ -46,25 +58,30 @@ def analyze_statistical_significance(modules, activities):
             args=(np.mean(activity_data[i]), np.std(activity_data[i]))
             )
             normal = "Normal" if p_value > 0.05 else "Não-normal"
-            print(f"  Atividade {activity}: p={p_value} ({normal})")
+            print(f"  Atividade {activity}: p={_format_p(p_value)} ({normal})")
         
         # Teste ANOVA ou Kruskal-Wallis dependendo da normalidade
         # (Vamos simplificar e fazer ambos para comparar)
         print("\nComparação entre TODAS as atividades:")
 
-        if all(stats.kstest(
+        normal_all = all(stats.kstest(
             data, 
             'norm', 
             args=(np.mean(data), np.std(data))
-            ).pvalue > 0.05 for data in activity_data):
+            ).pvalue > 0.05 for data in activity_data)
+
+        p_used = None
+        if normal_all:
             # ANOVA (para dados normais)
             f_stat, p_anova = stats.f_oneway(*activity_data)
-            print(f"  ANOVA: F={f_stat:.4f}, p={p_anova:.4f}")
+            print(f"  ANOVA: F={f_stat:.4f}, p={_format_p(p_anova)}")
+            p_used = p_anova
         else:
             # Kruskal-Wallis (para dados não-normais)
             h_stat, p_kruskal = stats.kruskal(*activity_data)
-            print(f"  Kruskal-Wallis: H={h_stat:.4f}, p={p_kruskal:.4f}")
+            print(f"  Kruskal-Wallis: H={h_stat:.4f}, p={_format_p(p_kruskal)}")
+            p_used = p_kruskal
         
         # Interpretação
-        significant = "SIGNIFICATIVO" if p_kruskal < 0.05 else "NÃO SIGNIFICATIVO"
+        significant = "SIGNIFICATIVO" if (p_used is not None and p_used < 0.05) else "NÃO SIGNIFICATIVO"
         print(f"  Resultado: {significant}")
