@@ -179,5 +179,5 @@ def plot_dbscan_outliers(data, clusters, activities):
         fig.delaxes(axes[j])
 
     plt.suptitle(title)
-    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.tight_layout(rect=(0, 0, 1, 0.95))
     plt.show()
