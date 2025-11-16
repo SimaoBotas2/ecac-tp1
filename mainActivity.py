@@ -21,7 +21,7 @@ all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
 # 1 Get dados em np array
-dados = data_treatment.get_data(all_participants,2) #type: ignore
+dados = data_treatment.get_data(1,2) #type: ignore
 
 if DEBUG:   
     print("Fim de get data")
@@ -77,7 +77,7 @@ k_means.print_outlier_density_per_activity(
     outliers,
     atividades=atividades_selecionadas,
 )
-
+"""
 # 3.7 Plot 3D K-means por atividade
 k_means.plot_kmeans_results_3d(
     data=modules_filtrados,
@@ -86,7 +86,7 @@ k_means.plot_kmeans_results_3d(
     outliers=outliers,
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
-)
+)"""
 
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
 
@@ -101,7 +101,7 @@ dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividad
 
 dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
 
-
+"""
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
@@ -211,3 +211,4 @@ for i, idx in enumerate(top10_relief):
     nome = feature_names[idx] if idx < len(feature_names) else f"f{idx}"
     valor = X_relief[instante, i]
     print(f"{i+1:2d}. {nome:40s}  valor = {valor:.6f}")
+"""

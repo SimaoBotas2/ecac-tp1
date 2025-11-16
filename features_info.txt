@@ -1,4 +1,4 @@
-Total janelas: 5563
+Total janelas: 380
 Total features por janela: 252
 Sampling rate: 50 Hz
 Window size: 250 amostras

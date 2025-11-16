@@ -126,61 +126,40 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
         plt.show()
 
 def plot_dbscan_outliers(data, clusters, activities):
-    """
-    Plota os resultados do DBSCAN em 2D, mostrando a distância de cada ponto
-    (ou índice) com subplots separados por atividade, destacando outliers em vermelho.
-
-    Parâmetros
-    ----------
-    data : np.ndarray
-        Dados de entrada (amostras × features). Se for multidimensional (>1D),
-        o eixo x representará o índice da amostra.
-    clusters : np.ndarray
-        Labels atribuídos pelo DBSCAN (-1 indica outliers).
-    activities : np.ndarray
-        Labels das atividades correspondentes a cada amostra.
-    """
     activities = np.asarray(activities)
     unique_activities = np.unique(activities)
-    n_activities = len(unique_activities)
-    title = "Outliers DBSCAN por Atividade"
 
-    ncols = ceil(n_activities / 2)
-    fig, axes = plt.subplots(2, ncols, figsize=(5 * ncols, 8), sharey=True)
-    axes = np.atleast_1d(axes).flatten()
+    x_vals = []
+    y_vals = []
+    colors = []
 
-    for idx, activity in enumerate(unique_activities):
-        ax = axes[idx]
-        mask = activities == activity
-        activity_clusters = clusters[mask]
-        activity_data = data[mask]
+    for act in unique_activities:
+        mask = (activities == act)
+        d_act = data[mask]
+        c_act = clusters[mask]
 
-        # Determina outliers
-        outliers = activity_clusters == -1
-        normals = ~outliers
+        out = (c_act == -1)
 
-        # Se os dados forem multidimensionais, projetamos em 1D só pra visualização
-        if activity_data.ndim > 1:
-            y_vals = np.linalg.norm(activity_data, axis=1)
+        if d_act.ndim > 1:
+            y = np.linalg.norm(d_act, axis=1)
         else:
-            y_vals = activity_data
+            y = d_act
 
-        # Plot dos pontos
-        ax.scatter(np.where(mask)[0][normals], y_vals[normals],
-                   color='blue', alpha=0.6, label='Normal')
-        ax.scatter(np.where(mask)[0][outliers], y_vals[outliers],
-                   color='red', alpha=0.8, label='Outlier')
+        x_vals.append(np.full_like(y, act))
+        y_vals.append(y)
+        colors.append(np.where(out, 'red', 'blue'))
 
-        ax.set_title(f"Atividade {activity}")
-        ax.set_xlabel("Índice da amostra")
-        if idx % ncols == 0:
-            ax.set_ylabel("Magnitude / Distância (proxy)")
-        ax.grid(True, alpha=0.3)
-        ax.legend()
+    x_vals = np.concatenate(x_vals)
+    y_vals = np.concatenate(y_vals)
+    colors = np.concatenate(colors)
 
-    for j in range(n_activities, len(axes)):
-        fig.delaxes(axes[j])
+    plt.figure(figsize=(14, 6))
+    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20)
 
-    plt.suptitle(title)
-    plt.tight_layout(rect=(0, 0, 1, 0.95))
+    plt.xticks(unique_activities, [f"A{int(a)}" for a in unique_activities])
+    plt.xlabel("Atividade")
+    plt.ylabel("Magnitude / Distância")
+    plt.title("Outliers DBSCAN por Atividade")
+    plt.grid(True, alpha=0.3)
     plt.show()
+
