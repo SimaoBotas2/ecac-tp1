@@ -20,8 +20,11 @@ if DEBUG:
 all_participants = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14]
 all_sensors = [1,2,3,4,5]
 
-# 1 Get dados em np array
-dados = data_treatment.get_data(1,2) #type: ignore
+# 1 Get dados em np array (escolhe aqui participante e sensores)
+participant_selected = 3
+sensors_selected = all_sensors  # ou por ex.: [1,2]
+dados = data_treatment.get_data(participant_selected, sensors_selected) #type: ignore
+print(f"Carregados dados do participante {participant_selected}, sensores {sensors_selected}")
 
 if DEBUG:   
     print("Fim de get data")
@@ -39,7 +42,7 @@ sensor_info = {
     label: modules[:, i]
     for i, label in enumerate(labels)
 }
-
+"""
 for label, data in sensor_info.items():
     boxplot.create_boxplot_per_activity(data, activities, label)
 
@@ -77,7 +80,7 @@ k_means.print_outlier_density_per_activity(
     outliers,
     atividades=atividades_selecionadas,
 )
-"""
+
 # 3.7 Plot 3D K-means por atividade
 k_means.plot_kmeans_results_3d(
     data=modules_filtrados,
@@ -86,7 +89,7 @@ k_means.plot_kmeans_results_3d(
     outliers=outliers,
     labels=labels_filtrados,
     atividades=atividades_selecionadas,
-)"""
+)
 
 k_means.plot_kmeans_outliers(distances,labels_filtrados,outliers)
 
@@ -101,7 +104,7 @@ dbscan.plot_dbscan_results_3d(dbscan_data,dbscan_clusters,dbscan_labels,atividad
 
 dbscan.plot_dbscan_outliers(dbscan_data,dbscan_clusters,dbscan_labels)
 
-"""
+
 # 4.1 Análise de significância estatística
 # F (ANOVA) = diferenças de MÉDIAS (maior = mais diferente)
 # H (Kruskal) = diferenças de DISTRIBUIÇÕES (maior = mais diferente)
@@ -212,3 +215,16 @@ for i, idx in enumerate(top10_relief):
     valor = X_relief[instante, i]
     print(f"{i+1:2d}. {nome:40s}  valor = {valor:.6f}")
 """
+
+# ===================== META 2 =========================================
+# Simplified: delegate the entire meta2 creation/analysis/augmentation to
+# `meta2_balance`: gerar e visualizar K amostras sintéticas do participante escolhido
+activity_for_aug = 4  # atividade alvo para SMOTE/visualização
+K_aug = 3             # número de amostras sintéticas
+try:
+    import meta2_balance
+    meta2_balance.generate_and_visualize_samples_for_participant(
+        participant_selected, activity=activity_for_aug, K=K_aug, sensors=sensors_selected
+    )
+except Exception as e:
+    print(f"[META2] Erro ao executar meta2_balance: {e}")
