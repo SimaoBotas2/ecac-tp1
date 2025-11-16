@@ -1,9 +1,9 @@
 import numpy as np
 from scipy import stats
 
-#Note:
-    #The docstrings in this document were written by us and refined by AI
-
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
 
 def _format_p(p_value: float) -> str:
     """Formata p-values em notação científica; para underflow (0.0) mostra limite inferior."""
