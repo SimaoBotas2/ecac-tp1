@@ -187,7 +187,7 @@ def generate_and_visualize_samples_for_participant(
         raise RuntimeError(f"Missing dependency for generation/plot: {e}")
 
     # 1) Load raw data for the specific participant and sensors
-    dados = data_treatment.get_data(participante, list(sensors))
+    dados = data_treatment.get_data(participante, list(sensors)) # type: ignore
     if getattr(dados, 'size', 0) == 0:
         raise FileNotFoundError(f"No data found for participant {participante} with sensors {sensors}")
 
