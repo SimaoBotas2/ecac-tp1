@@ -228,3 +228,25 @@ try:
     )
 except Exception as e:
     print(f"[META2] Erro ao executar meta2_balance: {e}")
+
+# ===================== EMBEDDINGS (2.x) ================================
+# Extrai embeddings com harnet5: 5s, reamostrado a 30Hz, apenas acelerómetro.
+try:
+    from embeddings_extractor import extract_embeddings_dataset, save_embeddings_to_csv
+
+    accel_data = dados[:, 1:4].astype(float)
+    sr = fe.sampling_rate_calculator(dados)
+    embeddings_X, embeddings_y = extract_embeddings_dataset(
+        accel_data=accel_data,
+        activities=activities,
+        sampling_rate=sr,
+        window_size_sec=5,
+        overlap=0.5,
+        allowed_activities=range(1,8),
+        batch_size=64,
+        device='cpu',
+    )
+    x_path, y_path = save_embeddings_to_csv(embeddings_X, embeddings_y)
+    print(f"Embeddings guardados em '{x_path}' e '{y_path}'  | Shape: {embeddings_X.shape}")
+except Exception as e:
+    print(f"[EMBEDDINGS] Erro a extrair embeddings: {e}")
