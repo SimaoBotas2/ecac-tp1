@@ -229,7 +229,7 @@ try:
 except Exception as e:
     print(f"[META2] Erro ao executar meta2_balance: {e}")
 
-# ===================== EMBEDDINGS (2.x) ================================
+# ===================== EMBEDDINGS (2) ================================
 # Extrai embeddings com harnet5: 5s, reamostrado a 30Hz, apenas acelerómetro.
 try:
     from embeddings_extractor import extract_embeddings_dataset, save_embeddings_to_csv

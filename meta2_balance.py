@@ -120,10 +120,10 @@ def run(
     """
     if ensure_meta2:
         try:
-            import meta2_prepare_INUTIL
+            import meta2_prepare
 
-            if hasattr(meta2_prepare_INUTIL, 'build_meta2'):
-                meta2_prepare_INUTIL.build_meta2()
+            if hasattr(meta2_prepare, 'build_meta2'):
+                meta2_prepare.build_meta2()
                 print(f"[meta2_balance] Ensured '{meta2_path}' exists via meta2_prepare.build_meta2().")
         except Exception as e:
             print(f"[meta2_balance] Warning: could not run meta2_prepare.build_meta2(): {e}")
