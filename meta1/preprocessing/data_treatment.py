@@ -53,37 +53,29 @@ def calculate_modules(data):
 def get_data(participante=0, sensor=1):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
+    Agora assume que os dados estão em: data/raw/dataset/partX/partXdevY.csv
+    """
 
-    Parâmetros
-    ----------
-    participante : int ou list[int], opcional
-        Participante(s) a carregar. O valor por defeito é 0.
-    sensor : int ou list[int], opcional
-        Sensor(es) a carregar. O valor por defeito é 1.
+    if not isinstance(participante, list):
+        participante = [participante]
 
-    Retorna
-    -------
-    numpy.ndarray
-        Array NumPy com os dados combinados dos parâmetros selecionados.
-"""
-    #Verificação dos parametros de entrada e troca para uma lista para iteração (poupar código)
-
-    if not isinstance(participante,list) :
-            participante = [participante]
-
-    if not isinstance(sensor,list):
-            sensor = [sensor]
+    if not isinstance(sensor, list):
+        sensor = [sensor]
 
     dados = []
 
+    # BASE_DIR = raiz do projeto = 2 níveis acima deste ficheiro (meta1/preprocessing)
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    dataset_root = os.path.join(base_dir, "data", "raw", "dataset")
+
     for p in participante:
-        nome_pasta = os.path.join("dataset", "part" + str(p))
+        nome_pasta = os.path.join(dataset_root, "part" + str(p))
         for s in sensor:
-            arquivo = os.path.join(nome_pasta, "part" + str(p) + "dev" + str(s) + ".csv")
+            arquivo = os.path.join(nome_pasta, f"part{p}dev{s}.csv")
             with open(arquivo, newline="", encoding="utf-8") as csvfile:
-                    reading = csv.reader(csvfile, delimiter=",")
-                    data = list(reading)
-                    dados.extend(data)  
+                reading = csv.reader(csvfile, delimiter=",")
+                data = list(reading)
+                dados.extend(data)
 
     dados_np = np.array(dados)
     return dados_np

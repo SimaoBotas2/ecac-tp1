@@ -3,7 +3,7 @@ import scipy.stats as stats
 import scipy.fft as fft
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
-from config import DEBUG
+from utils.config import DEBUG
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991

@@ -1,7 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from math import ceil
-from config import DEBUG
+from utils.config import DEBUG
+
+#Trabalho Realizado por:
+  #Martim Alves Rodrigues da Costa Duarte nº 2021275991
+  #Simão Tomás Botas Carvalho nº 2021223055
+
 
 #Nota:
     #As docstrings deste documento foram escritas pelos autores e refinadas com ajuda de LLMs.
@@ -143,60 +148,41 @@ def plot_kmeans_results_3d(data, clusters, centroids, outliers, labels, atividad
         plt.tight_layout()
         plt.show()
 
-#teste
-import numpy as np
-import matplotlib.pyplot as plt
-from math import ceil
 
 def plot_kmeans_outliers(distances, activities, outliers):
     """
-    Plota as distâncias de cada ponto ao seu centróide, com subplots separados por atividade,
-    destacando outliers em vermelho e pontos normais em azul.
-
-    Parâmetros
-    ----------
-    distances : np.ndarray
-        Distâncias finais dos pontos aos seus centróides (1D).
-    activities : np.ndarray
-        Labels das atividades correspondentes a cada ponto.
-    outliers : np.ndarray
-        Boolean array indicando quais pontos são outliers.
+    Plota num único gráfico: eixo X = atividade, Y = distância ao centróide.
+    Outliers a vermelho, normais a azul.
     """
+
     activities = np.asarray(activities)
-    unique_activities = np.unique(activities)
-    n_activities = len(unique_activities)
-    title = "Outliers K-means por Atividade"
+    unique_acts = np.unique(activities)
 
-    # grade com 2 linhas e colunas suficientes
-    ncols = ceil(n_activities / 2)
-    fig, axes = plt.subplots(2, ncols, figsize=(5 * ncols, 8), sharey=True)
-    axes = np.atleast_1d(axes).flatten()  # garante vetor 1D
+    x_vals = []
+    y_vals = []
+    colors = []
 
-    for idx, activity in enumerate(unique_activities):
-        ax = axes[idx]
-        mask = activities == activity
-        activity_distances = distances[mask]
-        activity_outliers = outliers[mask]
+    for act in unique_acts:
+        mask = (activities == act)
+        d_act = distances[mask]
+        o_act = outliers[mask]
 
-        # Pontos normais
-        ax.scatter(np.where(mask)[0][~activity_outliers], activity_distances[~activity_outliers],
-                   color='blue', alpha=0.6, label='Normal')
-        # Outliers
-        ax.scatter(np.where(mask)[0][activity_outliers], activity_distances[activity_outliers],
-                   color='red', alpha=0.8, label='Outlier')
+        x_vals.append(np.full_like(d_act, act))
+        y_vals.append(d_act)
+        colors.append(np.where(o_act, 'red', 'blue'))
 
-        ax.set_title(f"Atividade {activity}")
-        ax.set_xlabel("Índice da amostra")
-        if idx % ncols == 0:  # só na primeira coluna
-            ax.set_ylabel("Distância ao centróide")
-        ax.grid(True, alpha=0.3)
-        ax.legend()
+    x_vals = np.concatenate(x_vals)
+    y_vals = np.concatenate(y_vals)
+    colors = np.concatenate(colors)
 
-    for j in range(n_activities, len(axes)):
-        fig.delaxes(axes[j])
-
-    plt.suptitle(title)
-    plt.tight_layout(rect=(0, 0, 1, 0.95))
+    plt.figure(figsize=(14, 6))
+    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20)
+    
+    plt.xticks(unique_acts, [f"A{int(a)}" for a in unique_acts])
+    plt.xlabel("Atividade")
+    plt.ylabel("Distância ao centróide")
+    plt.title("Outliers K-means (distância ao centróide por atividade)")
+    plt.grid(True, alpha=0.3)
     plt.show()
 
 
