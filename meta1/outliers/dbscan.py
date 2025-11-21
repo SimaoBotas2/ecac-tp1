@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from math import ceil
-from config import DEBUG
+from utils.config import DEBUG
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
