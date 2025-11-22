@@ -18,10 +18,15 @@ Notas:
 from typing import Iterable
 import numpy as np
 import os
+from pathlib import Path
 
-INPUT_X = 'features_X.csv'
-INPUT_Y = 'features_y.csv'
-OUTPUT_FILE = 'meta2_features.csv'
+ROOT = Path(__file__).resolve().parents[2]
+DATA_PROCESSED = ROOT / "data" / "processed"
+
+INPUT_X = DATA_PROCESSED / 'features_X.csv'
+INPUT_Y = DATA_PROCESSED / 'features_y.csv'
+INPUT_PART = DATA_PROCESSED / 'features_participant.csv'
+OUTPUT_FILE = DATA_PROCESSED / 'meta2_features.csv'
 
 def build_meta2(
     input_X: str = INPUT_X,
@@ -29,12 +34,13 @@ def build_meta2(
     output: str = OUTPUT_FILE,
     activities: Iterable[int] = range(1, 8)
 ):
-    if not (os.path.exists(input_X) and os.path.exists(input_y)):
-        raise FileNotFoundError("Ficheiros de entrada 'features_X.csv' ou 'features_y.csv' não encontrados.")
+    if not (os.path.exists(input_X) and os.path.exists(input_y) and os.path.exists(INPUT_PART)):
+        raise FileNotFoundError("Ficheiros de entrada 'features_X.csv', 'features_y.csv' ou 'features_participant.csv' não encontrados.")
 
     # Ler matrizes de features e labels
     X = np.loadtxt(input_X, delimiter=',')
     y = np.loadtxt(input_y, delimiter=',')
+    participants = np.loadtxt(INPUT_PART, delimiter=',')
 
     # Garantir que y é inteiro
     y = y.astype(int)
@@ -44,14 +50,15 @@ def build_meta2(
 
     X_filtered = X[mask]
     y_filtered = y[mask]
+    participants_filtered = participants[mask]
 
-    combined = np.column_stack((X_filtered, y_filtered))
+    combined = np.column_stack((X_filtered, participants_filtered, y_filtered))
 
-    # Guardar (todas as features + label no fim)
-    np.savetxt(output, combined, delimiter=',', fmt='%.6f')
+    # Guardar (todas as features + coluna participante + label no fim)
+    np.savetxt(output, combined, delimiter=',', fmt='%.10e')
 
     print(
-        f"Gerado '{output}' com {combined.shape[0]} janelas e {combined.shape[1]-1} features + label."\
+        f"Gerado '{output}' com {combined.shape[0]} janelas, {X_filtered.shape[1]} features, coluna participante e label."
     )
     print(f"Atividades incluídas: {sorted(set(y_filtered))}")
 

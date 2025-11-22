@@ -6,6 +6,9 @@
 
 import sys
 from pathlib import Path
+# GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT))
 import numpy as np
 from meta1.preprocessing import data_treatment
 from meta1.features import feature_extractor as fe
@@ -15,9 +18,6 @@ from meta2.embeddings.embeddings_extractor import (
     save_embeddings_to_csv,
 )
 
-# GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(ROOT))
 
 # ======================================================================
 # PATHS DO PROJETO
@@ -25,6 +25,7 @@ sys.path.append(str(ROOT))
 
 DATA_PROCESSED = ROOT / "data" / "processed"
 DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
+META2_FEATURES_FILE = DATA_PROCESSED / "meta2_features.csv"
 
 print("\n=== META 2 – Preparar Dados ===")
 
@@ -48,31 +49,37 @@ mask_1_to_7 = activities <= 7
 dados = dados[mask_1_to_7]
 activities = activities[mask_1_to_7]
 
-print(f"Após filtrar atividades 1–7: {dados.shape}")
+print(f"Após filtrar atividades 1-7: {dados.shape}")
 
 # ======================================================================
 # TODO 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
-"""
-→ Contar amostras por atividade
-→ Verificar desbalanceamento
-→ Plot opcional
-"""
+
+print("\n=== 1.1 - Balanceamento das atividades ===")
+if META2_FEATURES_FILE.exists():
+    try:
+        meta2_balance.analyze(path=str(META2_FEATURES_FILE))
+    except Exception as e:
+        print(f"[META2][1.1] Erro ao analisar balanceamento via ficheiro: {e}")
+else:
+    print(f"[META2][1.1] Aviso: ficheiro '{META2_FEATURES_FILE.name}' não encontrado. A usar dados em memória.")
+    unique, counts = np.unique(activities, return_counts=True)
+    total = counts.sum()
+    for act, count in zip(unique, counts):
+        pct = (count / total) * 100 if total else 0
+        print(f"  Activity {act}: {count} samples ({pct:.2f}%)")
+    if counts.size:
+        ratio = counts.max() / max(counts.min(), 1)
+        print(f"  Imbalance ratio (max/min): {ratio:.2f}")
+    else:
+        print("  Sem amostras após filtragem.")
 
 # ======================================================================
 # TODO 1.2 — SMOTE (meta2_balance.py)
-# ======================================================================
-"""
-Implementação esperada:
-- selecionar janelas/segmentos da atividade A
-- interpolar entre vizinhos próximos
-"""
-
-# ======================================================================
 # TODO 1.3 — VISUALIZAR SÍNTESE DA ATIVIDADE 4 DO PARTICIPANTE 3
 # ======================================================================
 
-print("\n=== 1.3 – Gerar e Visualizar Amostras Sintéticas ===")
+print("\n=== 1.2 e 1.3 - Gerar e Visualizar Amostras Sintéticas ===")
 
 activity_for_aug = 4
 K_aug = 3
@@ -93,7 +100,7 @@ except Exception as e:
 # TODO 2 — EXTRAÇÃO DE EMBEDDINGS
 # ======================================================================
 
-print("\n=== 2.1 – Extrair Embeddings ===")
+print("\n=== 2.1 - Extrair Embeddings ===")
 
 try:
     accel_data = dados[:, 1:4].astype(float)
@@ -122,10 +129,10 @@ except Exception as e:
 # TODO 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
 # ======================================================================
 """
-Task 3.1 – TVT 60-20-20 within subject
-Task 3.2 – 9 train / 3 val / 3 test between subjects
-Task 3.3 – Discuss differences (written)
-Task 3.4 – Prepare datasets:
+Task 3.1 - TVT 60-20-20 within subject
+Task 3.2 - 9 train / 3 val / 3 test between subjects
+Task 3.3 - Discuss differences (written)
+Task 3.4 - Prepare datasets:
       a) full
       b) PCA → 90%
       c) ReliefF → top 15

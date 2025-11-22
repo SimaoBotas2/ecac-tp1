@@ -50,10 +50,13 @@ def calculate_modules(data):
         modules[:,  i] = calculate_module(data, [x, x+1, x+2])
     return modules
 
-def get_data(participante=0, sensor=1):
+def get_data(participante=0, sensor=1, return_participants=False):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
     Agora assume que os dados estão em: data/raw/dataset/partX/partXdevY.csv
+
+    Se return_participants=True, devolve também um vetor com o ID do participante
+    correspondente a cada linha da matriz devolvida.
     """
 
     if not isinstance(participante, list):
@@ -63,6 +66,7 @@ def get_data(participante=0, sensor=1):
         sensor = [sensor]
 
     dados = []
+    participant_ids = []
 
     # BASE_DIR = raiz do projeto = 2 níveis acima deste ficheiro (meta1/preprocessing)
     base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
@@ -76,6 +80,9 @@ def get_data(participante=0, sensor=1):
                 reading = csv.reader(csvfile, delimiter=",")
                 data = list(reading)
                 dados.extend(data)
+                participant_ids.extend([p] * len(data))
 
     dados_np = np.array(dados)
+    if return_participants:
+        return dados_np, np.array(participant_ids, dtype=int)
     return dados_np
