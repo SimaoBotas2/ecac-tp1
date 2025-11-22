@@ -153,7 +153,7 @@ class FeatureExtractor:
         
         return all_features
     
-def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_rate=50):
+def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_rate=50, participant_ids=None):
     """
     Implementa o ponto 4.2:
     - Janelas de 5 segundos com 50% overlap
@@ -181,6 +181,9 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
     total_windows = 0
     valid_windows = 0
     
+    if participant_ids is not None:
+        participant_ids = np.asarray(participant_ids)
+
     for start_idx in range(0, len(accel_data) - window_size + 1, step_size):
         end_idx = start_idx + window_size
         total_windows += 1
@@ -190,11 +193,19 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
         gyro_window = gyro_data[start_idx:end_idx]
         mag_window = mag_data[start_idx:end_idx]
         activity_window = activities[start_idx:end_idx]
+        participant_window = participant_ids[start_idx:end_idx] if participant_ids is not None else None
         
         # Verificar se a janela contém APENAS UMA atividade
         unique_activities = np.unique(activity_window)
         
-        if len(unique_activities) == 1:
+        if participant_window is not None:
+            unique_participants = np.unique(participant_window)
+            single_participant = len(unique_participants) == 1
+        else:
+            unique_participants = None
+            single_participant = True
+
+        if len(unique_activities) == 1 and single_participant:
             # JANELA VÁLIDA - extrair features
             try:
                 features = FeatureExtractor.extract_window_features(
@@ -211,6 +222,7 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
                     'start': start_idx,
                     'end': end_idx,
                     'activity': unique_activities[0],
+                    'participant': int(unique_participants[0]) if unique_participants is not None else None,
                     'n_features': len(feature_vector)
                 })
                 

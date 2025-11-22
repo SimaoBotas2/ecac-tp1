@@ -11,6 +11,11 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
+<<<<<<< HEAD
+=======
+DATA_PROCESSED = ROOT / "data" / "processed"
+
+>>>>>>> nigga
 # IMPORTS AJUSTADOS À ESTRUTURA NOVA
 from meta1.preprocessing import data_treatment, statistic_significance
 from meta1.outliers import boxplot, dbscan, k_means, zscore as z
@@ -32,7 +37,11 @@ sensors_selected = all_sensors
 print("\n=== 1. CARREGAR DADOS ===")
 
 # Para 3.1: TODOS os participantes e TODOS os sensores
+<<<<<<< HEAD
 dados_all = data_treatment.get_data(all_participants, all_sensors)
+=======
+dados_all, participants_all = data_treatment.get_data(all_participants, all_sensors, return_participants=True)
+>>>>>>> nigga
 activities_all = dados_all[:, 11].astype(int)
 modules_all = data_treatment.calculate_modules(dados_all[:, 1:10])
 
@@ -64,7 +73,11 @@ for label, data_sensor in sensor_info_all.items():
 # 3.3) Z-SCORE
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 3.3 / 3.4 – Z-SCORE OUTLIERS ===")
+=======
+print("\n=== 3.3 / 3.4 - Z-SCORE OUTLIERS ===")
+>>>>>>> nigga
 
 k_values = [3, 3.5, 4]
 
@@ -79,7 +92,11 @@ z.plot_outliers_zScore(sensor_info_single, activities, k_values)
 # 3.6 / 3.7) K-MEANS & OUTLIERS
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 3.6 / 3.7 – K-MEANS ===")
+=======
+print("\n=== 3.6 / 3.7 - K-MEANS ===")
+>>>>>>> nigga
 
 atividades_selecionadas = list(range(1, 17))
 modules_norm = data_treatment.normalize_range(modules, 0, 1)
@@ -105,7 +122,11 @@ k_means.plot_kmeans_outliers(distances, labels_filt, outliers_kmeans)
 # 3.7.1) DBSCAN (BÓNUS) – comentado se não quiseres correr sempre
 # ======================================================================
 """
+<<<<<<< HEAD
 print("\n=== 3.7.1 – DBSCAN (BÓNUS) ===")
+=======
+print("\n=== 3.7.1 - DBSCAN (BÓNUS) ===")
+>>>>>>> nigga
 
 eps = 0.04
 db_data, db_clusters, db_labels = dbscan.dbscan_cluster(
@@ -120,7 +141,11 @@ dbscan.plot_dbscan_outliers(db_data, db_clusters, db_labels)
 # 4.1) SIGNIFICÂNCIA ESTATÍSTICA
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 4.1 – SIGNIFICÂNCIA ESTATÍSTICA ===")
+=======
+print("\n=== 4.1 - SIGNIFICÂNCIA ESTATÍSTICA ===")
+>>>>>>> nigga
 
 modules_norm2 = data_treatment.normalize_range(modules)
 statistic_significance.analyze_statistical_significance(modules_norm2, activities)
@@ -129,6 +154,7 @@ statistic_significance.analyze_statistical_significance(modules_norm2, activitie
 # 4.2) EXTRAÇÃO DE FEATURES TEMPORAIS + ESPECTRAIS
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 4.2 – EXTRAÇÃO DE FEATURES ===")
 
 accel = dados[:, 1:4].astype(float)
@@ -138,17 +164,43 @@ mag  = dados[:, 7:10].astype(float)
 sr = fe.sampling_rate_calculator(dados)
 
 Xfeat, yfeat, winfo = fe.extract_features_4_2(accel, gyro, mag, activities, sr)
+=======
+print("\n=== 4.2 - EXTRAÇÃO DE FEATURES ===")
+
+accel = dados_all[:, 1:4].astype(float)
+gyro = dados_all[:, 4:7].astype(float)
+mag  = dados_all[:, 7:10].astype(float)
+
+sr = fe.sampling_rate_calculator(dados_all)
+
+Xfeat, yfeat, winfo = fe.extract_features_4_2(
+    accel, gyro, mag, activities_all, sr, participant_ids=participants_all
+)
+>>>>>>> nigga
 
 np.savetxt(DATA_PROCESSED / "features_X.csv", Xfeat, delimiter=",")
 np.savetxt(DATA_PROCESSED / "features_y.csv", yfeat, delimiter=",")
 
+<<<<<<< HEAD
+=======
+participants_windows = np.array([
+    info.get('participant', -1) if isinstance(info, dict) else -1
+    for info in winfo
+], dtype=int)
+np.savetxt(DATA_PROCESSED / "features_participant.csv", participants_windows, delimiter=",", fmt="%d")
+
+>>>>>>> nigga
 print(f"Features extraídas. Shape: {Xfeat.shape}")
 
 # ======================================================================
 # 4.3) PCA
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 4.3 – PCA ===")
+=======
+print("\n=== 4.3 - PCA ===")
+>>>>>>> nigga
 
 X_features = np.loadtxt(DATA_PROCESSED / "features_X.csv", delimiter=",")
 X_pca, pca_model, scaler = fe.pca_analysis(X_features, target_variance=0.75)
@@ -159,7 +211,11 @@ np.savetxt(DATA_PROCESSED / "features_X_pca.csv", X_pca, delimiter=",")
 # 4.5 / 4.6) FISHER SCORE & RELIEFF
 # ======================================================================
 
+<<<<<<< HEAD
 print("\n=== 4.5 / 4.6 – FISHER vs RELIEFF ===")
+=======
+print("\n=== 4.5 / 4.6 - FISHER vs RELIEFF ===")
+>>>>>>> nigga
 
 top10_fisher, fisher_scores = fs.fisher_score_selection(X_features, yfeat, top_n=10)
 top10_relief, relief_scores = fs.reliefF_selection(X_features, yfeat, top_n=10)

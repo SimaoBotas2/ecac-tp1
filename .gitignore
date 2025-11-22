@@ -4,4 +4,9 @@ __pycache__/
 .env
 .vscode/
 
+<<<<<<< HEAD
 data/raw/
+=======
+data/raw/
+data/processed/
+>>>>>>> nigga
