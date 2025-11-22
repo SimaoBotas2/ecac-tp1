@@ -2,31 +2,11 @@
 # ECAC 2025 – TP1 (META 2)
 # Autores: Simão Tomás Botas Carvalho nº 2021223055
 #          Martim Costa Duarte nº 2021275991
-
-"""
-=====================================================================
-=========================  META 2 – TODO MAP  ======================
-=====================================================================
-This file follows EXACTLY the structure described in the assignment.
-
-MODULE B tasks:
-(…mantém os TODOs…)
-=====================================================================
-"""
-
-# ======================================================================
-# IMPORTS NECESSÁRIOS PARA A ESTRUTURA DO PROJETO
-# ======================================================================
+#          Estrutura do projeto refinada com LLM (CHAT-GPT 5)
 
 import sys
 from pathlib import Path
 import numpy as np
-
-# GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(ROOT))
-
-# IMPORTS AJUSTADOS À ESTRUTURA NOVA
 from meta1.preprocessing import data_treatment
 from meta1.features import feature_extractor as fe
 from meta2.smote import meta2_balance
@@ -34,6 +14,10 @@ from meta2.embeddings.embeddings_extractor import (
     extract_embeddings_dataset,
     save_embeddings_to_csv,
 )
+
+# GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.append(str(ROOT))
 
 # ======================================================================
 # PATHS DO PROJETO
