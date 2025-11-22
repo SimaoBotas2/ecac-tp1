@@ -2,6 +2,7 @@
 # ECAC 2025 – META 1
 # Autores: Simão Tomás Botas Carvalho nº 2021223055
 #          Martim Costa Duarte nº 2021275991
+#          Estrutura do projeto refinada com LLM (CHAT-GPT 5)
 
 import sys
 from pathlib import Path
