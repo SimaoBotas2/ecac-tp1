@@ -231,6 +231,8 @@ def generate_and_visualize_samples_for_participant(
     out_plot: str | None = None,
     random_state: int | None = 42,
     allowed_activities=tuple(range(1, 8)),
+    force_recompute: bool = False,
+    features_dir: str | Path | None = None,
 ):
     """Generate K SMOTE samples for `activity` using ONLY data from `participante`.
 
@@ -250,30 +252,57 @@ def generate_and_visualize_samples_for_participant(
             raise RuntimeError(f"Missing dependency for generation/plot: {e}")
     import matplotlib.pyplot as plt
 
-    # 1) Load raw data for the specific participant and sensors
-    dados = data_treatment.get_data(participante, list(sensors)) # type: ignore
-    if getattr(dados, 'size', 0) == 0:
-        raise FileNotFoundError(f"No data found for participant {participante} with sensors {sensors}")
-
-    activities = dados[:, 11].astype(int)
-    accel_data = dados[:, 1:4].astype(float)
-    gyro_data = dados[:, 4:7].astype(float)
-    mag_data = dados[:, 7:10].astype(float)
-
-    sr = fe.sampling_rate_calculator(dados)
-
-    # 2) Extract features for this participant only
-    X, y, _ = fe.extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_rate=sr)
-    if getattr(X, 'size', 0) == 0:
-        raise RuntimeError("Feature extraction returned no windows for this participant.")
-
-    # 2.1) Filter to allowed activities (e.g., 1..7)
     allowed_set = set(allowed_activities)
-    mask_allowed = np.isin(y, list(allowed_set))
-    X = X[mask_allowed]
-    y = y[mask_allowed]
-    if X.size == 0:
-        raise RuntimeError(f"No windows remain after filtering allowed activities {sorted(allowed_set)}.")
+    features_dir = Path(features_dir) if features_dir else DATA_PROCESSED
+
+    X = None
+    y = None
+
+    if not force_recompute:
+        try:
+            X_all = np.loadtxt(features_dir / "features_X.csv", delimiter=',')
+            if X_all.ndim == 1:
+                X_all = X_all.reshape(1, -1)
+            y_all = np.loadtxt(features_dir / "features_y.csv", delimiter=',').astype(int)
+            participants_all = np.loadtxt(features_dir / "features_participant.csv", delimiter=',').astype(int)
+            if participants_all.ndim > 1:
+                participants_all = participants_all.ravel()
+            mask = (participants_all == participante) & np.isin(y_all, list(allowed_set))
+            if not np.any(mask):
+                raise ValueError(
+                    f"No precomputed features found for participant {participante} with allowed activities {sorted(allowed_set)}."
+                )
+            X = X_all[mask]
+            y = y_all[mask]
+            print(f"[meta2_balance] Using precomputed features from '{features_dir}'.")
+        except Exception as e:
+            print(f"[meta2_balance] Falling back to on-the-fly extraction (force_recompute=True): {e}")
+            force_recompute = True
+
+    if force_recompute or X is None or y is None:
+        # 1) Load raw data for the specific participant and sensors
+        dados = data_treatment.get_data(participante, list(sensors)) # type: ignore
+        if getattr(dados, 'size', 0) == 0:
+            raise FileNotFoundError(f"No data found for participant {participante} with sensors {sensors}")
+
+        activities = dados[:, 11].astype(int)
+        accel_data = dados[:, 1:4].astype(float)
+        gyro_data = dados[:, 4:7].astype(float)
+        mag_data = dados[:, 7:10].astype(float)
+
+        sr = fe.sampling_rate_calculator(dados)
+
+        # 2) Extract features for this participant only
+        X, y, _ = fe.extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_rate=sr)
+        if getattr(X, 'size', 0) == 0:
+            raise RuntimeError("Feature extraction returned no windows for this participant.")
+
+        mask_allowed = np.isin(y, list(allowed_set))
+        X = X[mask_allowed]
+        y = y[mask_allowed]
+        if X.size == 0:
+            raise RuntimeError(f"No windows remain after filtering allowed activities {sorted(allowed_set)}.")
+        print(f"[meta2_balance] Features recomputed for participant {participante} (force_recompute=True).")
 
     # 3) Check first two features exist
     if X.shape[1] < 2:

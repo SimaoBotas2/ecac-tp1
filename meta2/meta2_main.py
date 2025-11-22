@@ -26,8 +26,14 @@ from meta2.embeddings.embeddings_extractor import (
 DATA_PROCESSED = ROOT / "data" / "processed"
 DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
 META2_FEATURES_FILE = DATA_PROCESSED / "meta2_features.csv"
+FEATURES_X_FILE = DATA_PROCESSED / "features_X.csv"
+FEATURES_Y_FILE = DATA_PROCESSED / "features_y.csv"
+FEATURES_PART_FILE = DATA_PROCESSED / "features_participant.csv"
 
-print("\n=== META 2 – Preparar Dados ===")
+# Flag para voltar a extrair features específicas (default False)
+FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
+
+print("\n=== META 2 - Preparar Dados ===")
 
 # ======================================================================
 # TODO 0 — DEFINIR PARÂMETROS BASE
@@ -84,12 +90,44 @@ print("\n=== 1.2 e 1.3 - Gerar e Visualizar Amostras Sintéticas ===")
 activity_for_aug = 4
 K_aug = 3
 
+force_plot_recompute = FORCE_SPECIFIC_FEATURE_RECOMPUTE
+if not force_plot_recompute:
+    try:
+        features_X = np.loadtxt(FEATURES_X_FILE, delimiter=",")
+        if features_X.ndim == 1:
+            features_X = features_X.reshape(1, -1)
+        features_y = np.loadtxt(FEATURES_Y_FILE, delimiter=",").astype(int)
+        features_part = np.loadtxt(FEATURES_PART_FILE, delimiter=",").astype(int)
+        if features_part.ndim > 1:
+            features_part = features_part.ravel()
+
+        mask_participant = (features_part == participant_selected)
+        mask_allowed = np.isin(features_y, list(range(1, 8)))
+        combined_mask = mask_participant & mask_allowed
+        total_participant_windows = int(combined_mask.sum())
+        total_activity_windows = int((combined_mask & (features_y == activity_for_aug)).sum())
+
+        print(
+            f"[META2][1.2/1.3] Features pré-computadas encontradas: {total_participant_windows} janelas do participante {participant_selected}."
+        )
+        print(
+            f"[META2][1.2/1.3] Atividade {activity_for_aug}: {total_activity_windows} janelas disponíveis (pré-extraídas)."
+        )
+        if total_participant_windows == 0:
+            raise ValueError("Participante sem janelas no ficheiro pré-computado.")
+    except Exception as e:
+        print(f"[META2][1.2/1.3] Aviso: falha ao usar features pré-computadas ({e}). A re-extrair do bruto...")
+        force_plot_recompute = True
+
+
 try:
     meta2_balance.generate_and_visualize_samples_for_participant(
         participant_selected,
         activity=activity_for_aug,
         K=K_aug,
         sensors=sensors_selected,
+        force_recompute=force_plot_recompute,
+        features_dir=DATA_PROCESSED,
     )
 except Exception as e:
     print(f"[META2] Erro em SMOTE/visualização: {e}")
@@ -143,8 +181,8 @@ Task 3.4 - Prepare datasets:
 # TODO 4 — MODEL LEARNING (kNN)
 # ======================================================================
 """
-Task 4.1 – Implement manual kNN
-Task 4.2 – Implement metrics:
+Task 4.1 - Implement manual kNN
+Task 4.2 - Implement metrics:
       - confusion matrix
       - accuracy
       - precision
@@ -157,9 +195,9 @@ Task 4.2 – Implement metrics:
 # TODO 5 — EVALUATION PIPELINE
 # ======================================================================
 """
-Task 5.1 – Hyperparameter tuning (k)
-Task 5.2 – Report confusion matrices, compare
-Task 5.3 – Hypothesis testing (repeat splits for distributions)
+Task 5.1 - Hyperparameter tuning (k)
+Task 5.2 - Report confusion matrices, compare
+Task 5.3 - Hypothesis testing (repeat splits for distributions)
 """
 
 
@@ -193,4 +231,4 @@ Extra improvements:
 """
 
 
-print("\n=== META 2 – TODOS DEFINIDOS ===\n")
+print("\n=== META 2 - TODOS DEFINIDOS ===\n")
