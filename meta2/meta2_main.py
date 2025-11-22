@@ -17,6 +17,7 @@ from meta2.embeddings.embeddings_extractor import (
     extract_embeddings_dataset,
     save_embeddings_to_csv,
 )
+from meta2.splits import data_splitter
 
 
 # ======================================================================
@@ -41,6 +42,8 @@ print("\n=== META 2 - Preparar Dados ===")
 
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
+all_participants = list(range(15))
+SPLIT_RANDOM_STATE = 42
 
 # ======================================================================
 # TODO 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
@@ -48,7 +51,7 @@ sensors_selected = [1, 2, 3, 4, 5]
 
 print("\n--- Carregar dados ---")
 
-dados = data_treatment.get_data(participant_selected, sensors_selected)
+dados = data_treatment.get_data(participant_selected, sensors_selected)  # type: ignore[arg-type]
 activities = dados[:, 11].astype(int)
 
 mask_1_to_7 = activities <= 7
@@ -141,22 +144,32 @@ except Exception as e:
 print("\n=== 2.1 - Extrair Embeddings ===")
 
 try:
-    accel_data = dados[:, 1:4].astype(float)
-    sr = fe.sampling_rate_calculator(dados)
+    dados_all, participants_all = data_treatment.get_data(  # type: ignore[arg-type]
+        all_participants, sensors_selected, return_participants=True
+    )
+    accel_data = dados_all[:, 1:4].astype(float)
+    activities_all = dados_all[:, 11].astype(int)
+    sr = fe.sampling_rate_calculator(dados_all)
 
-    embeddings_X, embeddings_y = extract_embeddings_dataset(
+    embeddings_X, embeddings_y, embeddings_part = extract_embeddings_dataset(
         accel_data=accel_data,
-        activities=activities,
+        activities=activities_all,
         sampling_rate=sr,
         window_size_sec=5,
         overlap=0.5,
         allowed_activities=range(1, 8),
         batch_size=64,
         device="cpu",
+        participant_ids=participants_all,
     )
 
-    x_path, y_path = save_embeddings_to_csv(embeddings_X, embeddings_y)
-    print(f"Embeddings guardados → {x_path} | {y_path}")
+    x_path, y_path, part_path = save_embeddings_to_csv(
+        embeddings_X,
+        embeddings_y,
+        base_path=DATA_PROCESSED,
+        participants=embeddings_part,
+    )
+    print(f"Embeddings guardados → {x_path} | {y_path} | {part_path}")
 
 except Exception as e:
     print(f"[EMBEDDINGS] Erro: {e}")
@@ -175,6 +188,20 @@ Task 3.4 - Prepare datasets:
       b) PCA → 90%
       c) ReliefF → top 15
 """
+
+print("\n=== 3.1 / 3.2 - Data Splitting (Features & Embeddings) ===")
+try:
+    data_splitter.split_within_subject("features", random_state=SPLIT_RANDOM_STATE)
+    data_splitter.split_within_subject("embeddings", random_state=SPLIT_RANDOM_STATE)
+    _, participant_groups = data_splitter.split_between_subject(
+        "features", random_state=SPLIT_RANDOM_STATE
+    )
+    data_splitter.split_between_subject(
+        "embeddings", participant_groups=participant_groups
+    )
+    print("[META2][3.x] Splits guardados em data/processed/splits.")
+except Exception as e:
+    print(f"[META2][3.x] Erro ao gerar splits: {e}")
 
 
 # ======================================================================
