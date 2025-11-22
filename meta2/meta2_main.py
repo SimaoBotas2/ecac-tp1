@@ -6,12 +6,9 @@
 
 import sys
 from pathlib import Path
-<<<<<<< HEAD
-=======
 # GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
->>>>>>> nigga
 import numpy as np
 from meta1.preprocessing import data_treatment
 from meta1.features import feature_extractor as fe
@@ -20,15 +17,8 @@ from meta2.embeddings.embeddings_extractor import (
     extract_embeddings_dataset,
     save_embeddings_to_csv,
 )
-<<<<<<< HEAD
-
-# GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
-ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(ROOT))
-=======
 from meta2.splits import data_splitter
 
->>>>>>> nigga
 
 # ======================================================================
 # PATHS DO PROJETO
@@ -36,10 +26,6 @@ from meta2.splits import data_splitter
 
 DATA_PROCESSED = ROOT / "data" / "processed"
 DATA_PROCESSED.mkdir(parents=True, exist_ok=True)
-<<<<<<< HEAD
-
-print("\n=== META 2 – Preparar Dados ===")
-=======
 META2_FEATURES_FILE = DATA_PROCESSED / "meta2_features.csv"
 FEATURES_X_FILE = DATA_PROCESSED / "features_X.csv"
 FEATURES_Y_FILE = DATA_PROCESSED / "features_y.csv"
@@ -49,7 +35,6 @@ FEATURES_PART_FILE = DATA_PROCESSED / "features_participant.csv"
 FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 
 print("\n=== META 2 - Preparar Dados ===")
->>>>>>> nigga
 
 # ======================================================================
 # TODO 0 — DEFINIR PARÂMETROS BASE
@@ -57,11 +42,8 @@ print("\n=== META 2 - Preparar Dados ===")
 
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
-<<<<<<< HEAD
-=======
 all_participants = list(range(15))
 SPLIT_RANDOM_STATE = 42
->>>>>>> nigga
 
 # ======================================================================
 # TODO 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
@@ -69,48 +51,18 @@ SPLIT_RANDOM_STATE = 42
 
 print("\n--- Carregar dados ---")
 
-<<<<<<< HEAD
-dados = data_treatment.get_data(participant_selected, sensors_selected)
-=======
 dados = data_treatment.get_data(participant_selected, sensors_selected)  # type: ignore[arg-type]
->>>>>>> nigga
 activities = dados[:, 11].astype(int)
 
 mask_1_to_7 = activities <= 7
 dados = dados[mask_1_to_7]
 activities = activities[mask_1_to_7]
 
-<<<<<<< HEAD
-print(f"Após filtrar atividades 1–7: {dados.shape}")
-=======
 print(f"Após filtrar atividades 1-7: {dados.shape}")
->>>>>>> nigga
 
 # ======================================================================
 # TODO 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
-<<<<<<< HEAD
-"""
-→ Contar amostras por atividade
-→ Verificar desbalanceamento
-→ Plot opcional
-"""
-
-# ======================================================================
-# TODO 1.2 — SMOTE (meta2_balance.py)
-# ======================================================================
-"""
-Implementação esperada:
-- selecionar janelas/segmentos da atividade A
-- interpolar entre vizinhos próximos
-"""
-
-# ======================================================================
-# TODO 1.3 — VISUALIZAR SÍNTESE DA ATIVIDADE 4 DO PARTICIPANTE 3
-# ======================================================================
-
-print("\n=== 1.3 – Gerar e Visualizar Amostras Sintéticas ===")
-=======
 
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
@@ -137,13 +89,10 @@ else:
 # ======================================================================
 
 print("\n=== 1.2 e 1.3 - Gerar e Visualizar Amostras Sintéticas ===")
->>>>>>> nigga
 
 activity_for_aug = 4
 K_aug = 3
 
-<<<<<<< HEAD
-=======
 force_plot_recompute = FORCE_SPECIFIC_FEATURE_RECOMPUTE
 if not force_plot_recompute:
     try:
@@ -174,7 +123,6 @@ if not force_plot_recompute:
         force_plot_recompute = True
 
 
->>>>>>> nigga
 try:
     meta2_balance.generate_and_visualize_samples_for_participant(
         participant_selected,
@@ -193,17 +141,6 @@ except Exception as e:
 # TODO 2 — EXTRAÇÃO DE EMBEDDINGS
 # ======================================================================
 
-<<<<<<< HEAD
-print("\n=== 2.1 – Extrair Embeddings ===")
-
-try:
-    accel_data = dados[:, 1:4].astype(float)
-    sr = fe.sampling_rate_calculator(dados)
-
-    embeddings_X, embeddings_y = extract_embeddings_dataset(
-        accel_data=accel_data,
-        activities=activities,
-=======
 print("\n=== 2.1 - Extrair Embeddings ===")
 
 try:
@@ -217,7 +154,6 @@ try:
     embeddings_X, embeddings_y, embeddings_part = extract_embeddings_dataset(
         accel_data=accel_data,
         activities=activities_all,
->>>>>>> nigga
         sampling_rate=sr,
         window_size_sec=5,
         overlap=0.5,
@@ -244,14 +180,28 @@ except Exception as e:
 # TODO 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
 # ======================================================================
 """
-Task 3.1 – TVT 60-20-20 within subject
-Task 3.2 – 9 train / 3 val / 3 test between subjects
-Task 3.3 – Discuss differences (written)
-Task 3.4 – Prepare datasets:
+Task 3.1 - TVT 60-20-20 within subject
+Task 3.2 - 9 train / 3 val / 3 test between subjects
+Task 3.3 - Discuss differences (written)
+Task 3.4 - Prepare datasets:
       a) full
       b) PCA → 90%
       c) ReliefF → top 15
 """
+
+print("\n=== 3.1 / 3.2 - Data Splitting (Features & Embeddings) ===")
+try:
+    data_splitter.split_within_subject("features", random_state=SPLIT_RANDOM_STATE)
+    data_splitter.split_within_subject("embeddings", random_state=SPLIT_RANDOM_STATE)
+    _, participant_groups = data_splitter.split_between_subject(
+        "features", random_state=SPLIT_RANDOM_STATE
+    )
+    data_splitter.split_between_subject(
+        "embeddings", participant_groups=participant_groups
+    )
+    print("[META2][3.x] Splits guardados em data/processed/splits.")
+except Exception as e:
+    print(f"[META2][3.x] Erro ao gerar splits: {e}")
 
 
 # ======================================================================
