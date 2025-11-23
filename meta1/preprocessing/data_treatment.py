@@ -15,13 +15,13 @@ def normalize_range(X, new_min=0, new_max=1):
     """
     Normaliza um array NumPy para o intervalo [new_min, new_max].
 
-    Aplica normalização min–max a cada coluna do array, escalando os valores
+    Aplica normalização min-max a cada coluna do array, escalando os valores
     para o intervalo definido. Colunas com valores constantes são mantidas.
 
     Parâmetros
     ----------
     X : np.ndarray
-        Array de entrada (amostras × variáveis).
+        Array de entrada (amostras x variáveis).
     new_min : float, opcional
         Valor mínimo desejado. Por defeito é 0.
     new_max : float, opcional
@@ -54,13 +54,6 @@ def get_data(participante=0, sensor=1, return_participants=False):
     """
     Lê dados CSV de um ou mais participantes, com opção de filtrar por sensor.
     Agora assume que os dados estão em: data/raw/dataset/partX/partXdevY.csv
-<<<<<<< HEAD
-    """
-
-    if not isinstance(participante, list):
-        participante = [participante]
-
-=======
 
     Se return_participants=True, devolve também um vetor com o ID do participante
     correspondente a cada linha da matriz devolvida.
@@ -69,7 +62,6 @@ def get_data(participante=0, sensor=1, return_participants=False):
     if not isinstance(participante, list):
         participante = [participante]
 
->>>>>>> nigga
     if not isinstance(sensor, list):
         sensor = [sensor]
 
@@ -92,14 +84,9 @@ def get_data(participante=0, sensor=1, return_participants=False):
                 reading = csv.reader(csvfile, delimiter=",")
                 data = list(reading)
                 dados.extend(data)
-<<<<<<< HEAD
-
-    dados_np = np.array(dados)
-=======
                 participant_ids.extend([p] * len(data))
 
     dados_np = np.array(dados)
     if return_participants:
         return dados_np, np.array(participant_ids, dtype=int)
->>>>>>> nigga
     return dados_np

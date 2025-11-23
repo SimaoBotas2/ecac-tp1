@@ -18,6 +18,7 @@ from meta2.embeddings.embeddings_extractor import (
     save_embeddings_to_csv,
 )
 from meta2.splits import data_splitter
+from meta2.splits import scenario_builder
 
 
 # ======================================================================
@@ -191,15 +192,21 @@ Task 3.4 - Prepare datasets:
 
 print("\n=== 3.1 / 3.2 - Data Splitting (Features & Embeddings) ===")
 try:
-    data_splitter.split_within_subject("features", random_state=SPLIT_RANDOM_STATE)
-    data_splitter.split_within_subject("embeddings", random_state=SPLIT_RANDOM_STATE)
-    _, participant_groups = data_splitter.split_between_subject(
+    within_features = data_splitter.split_within_subject("features", random_state=SPLIT_RANDOM_STATE)
+    within_embeddings = data_splitter.split_within_subject("embeddings", random_state=SPLIT_RANDOM_STATE)
+    between_features, participant_groups = data_splitter.split_between_subject(
         "features", random_state=SPLIT_RANDOM_STATE
     )
-    data_splitter.split_between_subject(
+    between_embeddings, _ = data_splitter.split_between_subject(
         "embeddings", participant_groups=participant_groups
     )
-    print("[META2][3.x] Splits guardados em data/processed/splits.")
+    print("[META2][3.1 e 3.2] Splits guardados em data/processed/splits.")
+
+    scenario_builder.prepare_scenarios("features", "within", splits=within_features)
+    scenario_builder.prepare_scenarios("embeddings", "within", splits=within_embeddings)
+    scenario_builder.prepare_scenarios("features", "between", splits=between_features)
+    scenario_builder.prepare_scenarios("embeddings", "between", splits=between_embeddings)
+    print("[META2][3.4] Cenários guardados em data/processed/scenarios.")
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
 

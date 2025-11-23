@@ -184,3 +184,20 @@ def split_between_subject(
         _save_splits(kind, "between", splits)
     _print_summary(kind, "between", splits)
     return splits, groups
+
+
+def load_saved_splits(kind: str, strategy: str) -> Dict[str, np.ndarray]:
+    """Load previously saved CSV splits for a given dataset kind and strategy."""
+    strategy = strategy.lower()
+    if strategy not in {"within", "between"}:
+        raise ValueError("strategy deve ser 'within' ou 'between'.")
+
+    splits = {}
+    base_dir = SPLITS_DIR / kind
+    for split_name in _SPLIT_NAMES:
+        path = base_dir / f"{kind}_{strategy}_{split_name}.csv"
+        if not path.exists():
+            raise FileNotFoundError(f"Ficheiro de split não encontrado: {path}")
+        data = _ensure_matrix(np.loadtxt(path, delimiter=","))
+        splits[split_name] = data
+    return splits

@@ -24,7 +24,7 @@ def analyze_statistical_significance(modules, activities):
     Parâmetros
     ----------
     modules : np.ndarray
-        Dados de sensores (amostras × 3 sensores: Aceleração, Giroscópio, Magnetómetro).
+        Dados de sensores (amostras x 3 sensores: Aceleração, Giroscópio, Magnetómetro).
     activities : np.ndarray
         Rótulos das atividades correspondentes a cada amostra.
 
