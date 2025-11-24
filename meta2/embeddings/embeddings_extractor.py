@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Iterable, Tuple
 import numpy as np
 import torch
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from utils.progress import progress_bar
 
 # Torch hub repo
 _REPO = 'OxWearables/ssl-wearables'
@@ -108,8 +111,15 @@ def extract_embeddings_dataset(
     labels: list[int] = []
     window_participants: list[int] = []
 
+    # Pre-calculate total windows for progress bar
+    total_windows = len(range(0, accel_data.shape[0] - win_len + 1, step))
+    current_window = 0
+
     # Slide over windows
     for start in range(0, accel_data.shape[0] - win_len + 1, step):
+        progress_bar(current_window, total_windows, label="Extracting windows")
+        current_window += 1
+        
         end = start + win_len
         label_win = y_all[start:end]
         uniq = np.unique(label_win)
@@ -154,8 +164,14 @@ def extract_embeddings_dataset(
     # Forward in batches
     X_emb = np.empty((X_rs.shape[0], emb_dim), dtype=np.float32)
     idx = 0
+    total_batches = (X_rs.shape[0] + batch_size - 1) // batch_size
+    batch_num = 0
+    
     with torch.no_grad():
         for i in range(0, X_rs.shape[0], batch_size):
+            progress_bar(batch_num, total_batches, label="Forward pass batches")
+            batch_num += 1
+            
             batch = torch.from_numpy(X_rs[i:i+batch_size]).to(device)
             feats = feat_extractor(batch)
             feats = torch.flatten(feats, start_dim=1)

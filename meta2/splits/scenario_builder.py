@@ -24,6 +24,9 @@ from sklearn.preprocessing import StandardScaler
 from meta2.splits import data_splitter
 from meta1.features.feature_extractor import pca_analysis
 from meta1.features import feature_selection as fs
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from utils.progress import progress_bar, progress_with_time
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
@@ -182,11 +185,23 @@ def prepare_scenarios(
     save: bool = True,
 ) -> Dict[str, ScenarioResult]:
     """Compute normalised/PCA/ReliefF datasets for a given split strategy."""
+    import time
+    
+    start_all = time.time()
+    
     if splits is None:
         splits = data_splitter.load_saved_splits(kind, strategy)
     views = {name: _matrix_to_view(matrix) for name, matrix in splits.items()}
 
+    print(f"\n[Scenarios] Processing '{kind}' with '{strategy}' strategy...")
+    
+    # ====== NORMALIZAÇÃO ======
+    print(f"[Scenario: all] Normalizing...")
+    start = time.time()
     normalised, scaler = _normalise_views(views)
+    elapsed = time.time() - start
+    print(f"  ✓ Normalized in {elapsed:.2f}s")
+    
     scenarios: Dict[str, ScenarioResult] = {}
 
     scaler_mean = cast(np.ndarray, scaler.mean_)
@@ -202,10 +217,16 @@ def prepare_scenarios(
         },
     )
 
+    # ====== PCA ======
+    print(f"[Scenario: pca] Fitting PCA...")
+    start = time.time()
     train_raw_view = views.get("train")
     if train_raw_view is None:
         raise ValueError("Split 'train' necessário para ajustar PCA.")
     pca_model, pca_scaler, train_projection = _fit_pca_with_helper(train_raw_view.X, target_variance)
+    elapsed = time.time() - start
+    print(f"  ✓ PCA fitted in {elapsed:.2f}s ({pca_model.n_components_} components, {pca_model.explained_variance_ratio_.sum()*100:.1f}% variance)")
+    
     pca_scaler_mean = cast(np.ndarray, pca_scaler.mean_)
     pca_scaler_scale = cast(np.ndarray, pca_scaler.scale_)
     pca_views = _build_pca_views(views, pca_scaler, pca_model, train_projection)
@@ -221,6 +242,9 @@ def prepare_scenarios(
         },
     )
 
+    # ====== RELIEFF ======
+    print(f"[Scenario: relief] Fitting ReliefF...")
+    start = time.time()
     relief_idx = _fit_relief_with_helper(
         normalised["train"].X,
         normalised["train"].y,
@@ -228,16 +252,30 @@ def prepare_scenarios(
         relief_neighbors,
         max_samples=relief_max_samples,
     )
+    elapsed = time.time() - start
+    print(f"  ✓ ReliefF fitted in {elapsed:.2f}s ({len(relief_idx)} top features selected)")
+    
     relief_views = _subset_views(normalised, relief_idx)
     scenarios["relief"] = ScenarioResult(
         split_data=relief_views,
         metadata={"relief_indices": relief_idx.astype(np.int32)},
     )
 
+    # ====== SAVING ======
     if save:
-        for scenario_name, result in scenarios.items():
+        print(f"[Scenarios] Saving to disk...")
+        start_save = time.time()
+        
+        for idx, (scenario_name, result) in enumerate(scenarios.items()):
+            progress_with_time(idx, len(scenarios), start_save, label=f"Saving scenario '{scenario_name}'")
             _persist_scenario(kind, strategy, scenario_name, result)
+        
+        elapsed_save = time.time() - start_save
+        print(f"[Scenarios] Saved in {elapsed_save:.2f}s")
 
+    elapsed_total = time.time() - start_all
+    print(f"[Scenarios] Total time: {elapsed_total:.2f}s\n")
+    
     return scenarios
 
 

@@ -17,6 +17,9 @@ import numpy as np
 import os
 from typing import Tuple
 from pathlib import Path
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from utils.progress import progress_bar
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
@@ -114,7 +117,9 @@ def generate_smote_samples(
 
     synth = []
     synth_participants: list[int] = []
-    for _ in range(K):
+    for smote_idx in range(K):
+        progress_bar(smote_idx, K, label="Generating SMOTE samples")
+        
         i = rng.integers(0, n_min)
         neighs = neigh_indices[i]
         j = rng.choice(neighs)

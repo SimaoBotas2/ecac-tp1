@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import ceil
 from utils.config import DEBUG
+from utils.progress import progress_bar
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -47,7 +48,9 @@ def k_means_manual(data, labels, atividades, k, max_iters=100):
     # Fazer os centroides com os indices
     centroids = data_filtrada[indices]
 
-    for _ in range(max_iters):
+    for iter_num in range(max_iters):
+        progress_bar(iter_num, max_iters, label="K-means iterations")
+        
         # Cria uma matriz para guardar o valor da distancia para cada cluster
         distances = np.linalg.norm(data_filtrada[:, np.newaxis, :] - centroids[np.newaxis, :, :], axis=2)
 
@@ -68,7 +71,7 @@ def k_means_manual(data, labels, atividades, k, max_iters=100):
         # Funcao verifica a igualdade de dois arrays dentro de uma pequena margem de erro
         if np.allclose(centroids, new_centroids):
             if DEBUG:
-                print(f"K-means convergiu na iteracao {_}")
+                print(f"K-means convergiu na iteracao {iter_num}")
             break
 
         # Atualiza os centroides

@@ -15,6 +15,9 @@ from pathlib import Path
 from typing import Dict, Tuple
 
 import numpy as np
+import sys
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+from utils.progress import progress_bar
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
@@ -114,7 +117,11 @@ def split_within_subject(
     X, y, participants = _load_dataset(kind)
     rng = np.random.default_rng(random_state)
     buffers = {name: [] for name in _SPLIT_NAMES}
-    for pid in np.unique(participants):
+    unique_pids = np.unique(participants)
+    
+    for pidx, pid in enumerate(unique_pids):
+        progress_bar(pidx, len(unique_pids), label=f"Within-subject split ({kind})")
+        
         idx = np.where(participants == pid)[0]
         if idx.size == 0:
             continue

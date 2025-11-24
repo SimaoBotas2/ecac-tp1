@@ -19,6 +19,8 @@ from meta2.embeddings.embeddings_extractor import (
 )
 from meta2.splits import data_splitter
 from meta2.splits import scenario_builder
+from models.knn import KNNClassifier, print_metrics
+from utils.progress import print_section
 
 
 # ======================================================================
@@ -35,7 +37,7 @@ FEATURES_PART_FILE = DATA_PROCESSED / "features_participant.csv"
 # Flag para voltar a extrair features específicas (default False)
 FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 
-print("\n=== META 2 - Preparar Dados ===")
+print_section("META 2 - Preparar Dados")
 
 # ======================================================================
 # TODO 0 — DEFINIR PARÂMETROS BASE
@@ -47,7 +49,7 @@ all_participants = list(range(15))
 SPLIT_RANDOM_STATE = 42
 
 # ======================================================================
-# TODO 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
+# 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
 # ======================================================================
 
 print("\n--- Carregar dados ---")
@@ -62,7 +64,7 @@ activities = activities[mask_1_to_7]
 print(f"Após filtrar atividades 1-7: {dados.shape}")
 
 # ======================================================================
-# TODO 1.1 — ANALISAR BALANCEAMENTO DO DATASET
+# 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 
 print("\n=== 1.1 - Balanceamento das atividades ===")
@@ -85,10 +87,10 @@ else:
         print("  Sem amostras após filtragem.")
 
 # ======================================================================
-# TODO 1.2 — SMOTE (meta2_balance.py)
-# TODO 1.3 — VISUALIZAR SÍNTESE DA ATIVIDADE 4 DO PARTICIPANTE 3
+#  1.2 — SMOTE
+#  1.3 — VISUALIZAR SÍNTESE DA ATIVIDADE 4 DO PARTICIPANTE 3
 # ======================================================================
-
+"""
 print("\n=== 1.2 e 1.3 - Gerar e Visualizar Amostras Sintéticas ===")
 
 activity_for_aug = 4
@@ -136,13 +138,13 @@ try:
 except Exception as e:
     print(f"[META2] Erro em SMOTE/visualização: {e}")
     print("TODO 1.2/1.3: verificar meta2_balance.py")
-
+"""
 
 # ======================================================================
 # TODO 2 — EXTRAÇÃO DE EMBEDDINGS
 # ======================================================================
-
-print("\n=== 2.1 - Extrair Embeddings ===")
+"""
+print_section("2.1 - Extrair Embeddings")
 
 try:
     dados_all, participants_all = data_treatment.get_data(  # type: ignore[arg-type]
@@ -175,7 +177,7 @@ try:
 except Exception as e:
     print(f"[EMBEDDINGS] Erro: {e}")
     print("TODO 2.1: completar embeddings_extractor.py")
-
+"""
 
 # ======================================================================
 # TODO 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
@@ -188,9 +190,9 @@ Task 3.4 - Prepare datasets:
       a) full
       b) PCA → 90%
       c) ReliefF → top 15
-"""
 
-print("\n=== 3.1 / 3.2 - Data Splitting (Features & Embeddings) ===")
+
+print_section("3.1 / 3.2 - Data Splitting (Features & Embeddings)")
 try:
     within_features = data_splitter.split_within_subject("features", random_state=SPLIT_RANDOM_STATE)
     within_embeddings = data_splitter.split_within_subject("embeddings", random_state=SPLIT_RANDOM_STATE)
@@ -209,10 +211,10 @@ try:
     print("[META2][3.4] Cenários guardados em data/processed/scenarios.")
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
-
+"""
 
 # ======================================================================
-# TODO 4 — MODEL LEARNING (kNN)
+# 4 — MODEL LEARNING (kNN)
 # ======================================================================
 """
 Task 4.1 - Implement manual kNN
@@ -223,6 +225,108 @@ Task 4.2 - Implement metrics:
       - recall
       - F1
 """
+
+print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
+
+try:
+    # Ficheiro para guardar resultados
+    results_dir = DATA_PROCESSED / "results"
+    results_dir.mkdir(parents=True, exist_ok=True)
+    results_file = results_dir / "knn_results.txt"
+    
+    # Abrir ficheiro para escrita
+    with open(results_file, 'w') as f:
+        f.write("=" * 70 + "\n")
+        f.write("META 2 - kNN Classification Results\n")
+        f.write("=" * 70 + "\n\n")
+        
+        # Carregar splits já criados (within-subject)
+        splits_dir = DATA_PROCESSED / "splits" / "embeddings+0"
+        
+        X_train = np.loadtxt(splits_dir / "embeddings_within_train.csv", delimiter=",")
+        y_train = np.loadtxt(splits_dir / "embeddings_within_train.csv", delimiter=",", usecols=-1).astype(int)
+        
+        X_val = np.loadtxt(splits_dir / "embeddings_within_val.csv", delimiter=",")
+        y_val = np.loadtxt(splits_dir / "embeddings_within_val.csv", delimiter=",", usecols=-1).astype(int)
+        
+        X_test = np.loadtxt(splits_dir / "embeddings_within_test.csv", delimiter=",")
+        y_test = np.loadtxt(splits_dir / "embeddings_within_test.csv", delimiter=",", usecols=-1).astype(int)
+        
+        # Remove a última coluna (labels) dos dados de entrada
+        X_train = X_train[:, :-1]
+        X_val = X_val[:, :-1]
+        X_test = X_test[:, :-1]
+        
+        msg = f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n"
+        msg += f"Features por amostra: {X_train.shape[1]}\n\n"
+        print(msg)
+        f.write(msg)
+        
+        # Treinar kNN
+        knn = KNNClassifier(k=5)
+        knn.fit(X_train, y_train)
+        
+        # Calcular métricas
+        train_acc = knn.score(X_train, y_train)
+        val_acc = knn.score(X_val, y_val)
+        test_acc = knn.score(X_test, y_test)
+        
+        # Resultados
+        results_msg = f"\nTrain Accuracy: {train_acc:.4f}\n"
+        results_msg += f"Val Accuracy: {val_acc:.4f}\n"
+        results_msg += f"Test Accuracy: {test_acc:.4f}\n"
+        print(results_msg)
+        f.write(results_msg)
+        
+        # Matriz de confusão e métricas detalhadas
+        y_pred_train = knn.predict(X_train)
+        y_pred_val = knn.predict(X_val)
+        y_pred_test = knn.predict(X_test)
+        
+        from models.knn import confusion_matrix
+        
+        cm_test, classes = confusion_matrix(y_test, y_pred_test)
+        
+        f.write("\n" + "=" * 70 + "\n")
+        f.write("TEST SET - Detailed Metrics\n")
+        f.write("=" * 70 + "\n\n")
+        
+        # Escrever matriz de confusão
+        f.write("Confusion Matrix (rows=true, cols=predicted):\n")
+        f.write("     " + "  ".join(f"A{c}" for c in classes) + "\n")
+        for i, true_class in enumerate(classes):
+            row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
+            f.write(f"A{true_class}  {row_str}\n")
+        
+        # Métricas por classe
+        f.write("\nPer-class metrics:\n")
+        f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
+        f.write("-" * 52 + "\n")
+        
+        for i, c in enumerate(classes):
+            tp = cm_test[i, i]
+            fp = cm_test[:, i].sum() - tp
+            fn = cm_test[i, :].sum() - tp
+            support = cm_test[i, :].sum()
+            
+            prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+            rec = tp / (tp + fn) if (tp + fn) > 0 else 0
+            f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0
+            
+            f.write(f"A{c:<7} {prec:<12.4f} {rec:<12.4f} {f1:<12.4f} {int(support):<10}\n")
+        
+        f.write("\n" + "=" * 70 + "\n")
+        f.write(f"Resultados guardados em: {results_file}\n")
+        f.write("=" * 70 + "\n")
+    
+    # Também imprimir no terminal
+    print_metrics(y_test, y_pred_test)
+    print(f"\n✓ Resultados guardados em: {results_file}")
+
+except Exception as e:
+    print(f"[META2][4.1/4.2] Erro ao usar splits: {e}")
+    import traceback
+    traceback.print_exc()
 
 
 # ======================================================================
