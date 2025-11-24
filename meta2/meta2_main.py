@@ -229,76 +229,78 @@ Task 4.2 - Implement metrics:
 print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
 
 try:
-    # Ficheiro para guardar resultados
+    # Carregar splits já criados (within-subject)
+    splits_dir = DATA_PROCESSED / "splits" / "features"
+    
+    X_train = np.loadtxt(splits_dir / "features_within_train.csv", delimiter=",")
+    y_train = np.loadtxt(splits_dir / "features_within_train.csv", delimiter=",", usecols=-1).astype(int)
+    
+    X_val = np.loadtxt(splits_dir / "features_within_val.csv", delimiter=",")
+    y_val = np.loadtxt(splits_dir / "features_within_val.csv", delimiter=",", usecols=-1).astype(int)
+    
+    X_test = np.loadtxt(splits_dir / "features_within_test.csv", delimiter=",")
+    y_test = np.loadtxt(splits_dir / "features_within_test.csv", delimiter=",", usecols=-1).astype(int)
+    
+    # Remove a última coluna (labels) dos dados de entrada
+    X_train = X_train[:, :-1]
+    X_val = X_val[:, :-1]
+    X_test = X_test[:, :-1]
+    
+    print(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}")
+    print(f"Features por amostra: {X_train.shape[1]}\n")
+    
+    # Treinar kNN
+    knn = KNNClassifier(k=5)
+    knn.fit(X_train, y_train)
+    
+    # ========== PREDIÇÕES E CÁLCULOS TUDO DE UMA VEZ ==========
+    
+    # Train predictions
+    y_pred_train = knn.predict(X_train)
+    train_acc = (y_pred_train == y_train).mean()
+    
+    # Val predictions
+    y_pred_val = knn.predict(X_val)
+    val_acc = (y_pred_val == y_val).mean()
+    
+    # Test predictions
+    y_pred_test = knn.predict(X_test)
+    test_acc = (y_pred_test == y_test).mean()
+    
+    # Calcular confusion matrix (only once)
+    from models.knn import confusion_matrix
+    cm_test, classes = confusion_matrix(y_test, y_pred_test)
+    
+    # ========== GUARDAR TUDO NUM FICHEIRO ==========
+    
     results_dir = DATA_PROCESSED / "results"
     results_dir.mkdir(parents=True, exist_ok=True)
     results_file = results_dir / "knn_results.txt"
     
-    # Abrir ficheiro para escrita
     with open(results_file, 'w') as f:
         f.write("=" * 70 + "\n")
         f.write("META 2 - kNN Classification Results\n")
         f.write("=" * 70 + "\n\n")
         
-        # Carregar splits já criados (within-subject)
-        splits_dir = DATA_PROCESSED / "splits" / "embeddings+0"
+        f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
+        f.write(f"Features por amostra: {X_train.shape[1]}\n\n")
         
-        X_train = np.loadtxt(splits_dir / "embeddings_within_train.csv", delimiter=",")
-        y_train = np.loadtxt(splits_dir / "embeddings_within_train.csv", delimiter=",", usecols=-1).astype(int)
-        
-        X_val = np.loadtxt(splits_dir / "embeddings_within_val.csv", delimiter=",")
-        y_val = np.loadtxt(splits_dir / "embeddings_within_val.csv", delimiter=",", usecols=-1).astype(int)
-        
-        X_test = np.loadtxt(splits_dir / "embeddings_within_test.csv", delimiter=",")
-        y_test = np.loadtxt(splits_dir / "embeddings_within_test.csv", delimiter=",", usecols=-1).astype(int)
-        
-        # Remove a última coluna (labels) dos dados de entrada
-        X_train = X_train[:, :-1]
-        X_val = X_val[:, :-1]
-        X_test = X_test[:, :-1]
-        
-        msg = f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n"
-        msg += f"Features por amostra: {X_train.shape[1]}\n\n"
-        print(msg)
-        f.write(msg)
-        
-        # Treinar kNN
-        knn = KNNClassifier(k=5)
-        knn.fit(X_train, y_train)
-        
-        # Calcular métricas
-        train_acc = knn.score(X_train, y_train)
-        val_acc = knn.score(X_val, y_val)
-        test_acc = knn.score(X_test, y_test)
-        
-        # Resultados
-        results_msg = f"\nTrain Accuracy: {train_acc:.4f}\n"
-        results_msg += f"Val Accuracy: {val_acc:.4f}\n"
-        results_msg += f"Test Accuracy: {test_acc:.4f}\n"
-        print(results_msg)
-        f.write(results_msg)
-        
-        # Matriz de confusão e métricas detalhadas
-        y_pred_train = knn.predict(X_train)
-        y_pred_val = knn.predict(X_val)
-        y_pred_test = knn.predict(X_test)
-        
-        from models.knn import confusion_matrix
-        
-        cm_test, classes = confusion_matrix(y_test, y_pred_test)
+        f.write(f"Train Accuracy: {train_acc:.4f}\n")
+        f.write(f"Val Accuracy: {val_acc:.4f}\n")
+        f.write(f"Test Accuracy: {test_acc:.4f}\n")
         
         f.write("\n" + "=" * 70 + "\n")
         f.write("TEST SET - Detailed Metrics\n")
         f.write("=" * 70 + "\n\n")
         
-        # Escrever matriz de confusão
+        # Confusion Matrix
         f.write("Confusion Matrix (rows=true, cols=predicted):\n")
         f.write("     " + "  ".join(f"A{c}" for c in classes) + "\n")
         for i, true_class in enumerate(classes):
             row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
             f.write(f"A{true_class}  {row_str}\n")
         
-        # Métricas por classe
+        # Per-class metrics
         f.write("\nPer-class metrics:\n")
         f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
         f.write("-" * 52 + "\n")
@@ -319,12 +321,21 @@ try:
         f.write(f"Resultados guardados em: {results_file}\n")
         f.write("=" * 70 + "\n")
     
-    # Também imprimir no terminal
-    print_metrics(y_test, y_pred_test)
+    # Imprimir no terminal
+    print(f"\nTrain Accuracy: {train_acc:.4f}")
+    print(f"Val Accuracy: {val_acc:.4f}")
+    print(f"Test Accuracy: {test_acc:.4f}\n")
+    
+    print("Confusion Matrix (rows=true, cols=predicted):")
+    print("     " + "  ".join(f"A{c}" for c in classes))
+    for i, true_class in enumerate(classes):
+        row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
+        print(f"A{true_class}  {row_str}")
+    
     print(f"\n✓ Resultados guardados em: {results_file}")
 
 except Exception as e:
-    print(f"[META2][4.1/4.2] Erro ao usar splits: {e}")
+    print(f"[META2][4.1/4.2] Erro: {e}")
     import traceback
     traceback.print_exc()
 
