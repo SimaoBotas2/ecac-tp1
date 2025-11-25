@@ -228,111 +228,116 @@ Task 4.2 - Implement metrics:
 
 print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
 
+# Cenários a testar
+scenarios_dir = DATA_PROCESSED / "scenarios" / "features" / "between"
+scenarios = ["all", "pca", "relief"]
+
+from models.knn import confusion_matrix
+
+results_dir = DATA_PROCESSED / "results"
+results_dir.mkdir(parents=True, exist_ok=True)
+
 try:
-    # Carregar splits já criados (within-subject)
-    splits_dir = DATA_PROCESSED / "splits" / "features"
-    
-    X_train = np.loadtxt(splits_dir / "features_within_train.csv", delimiter=",")
-    y_train = np.loadtxt(splits_dir / "features_within_train.csv", delimiter=",", usecols=-1).astype(int)
-    
-    X_val = np.loadtxt(splits_dir / "features_within_val.csv", delimiter=",")
-    y_val = np.loadtxt(splits_dir / "features_within_val.csv", delimiter=",", usecols=-1).astype(int)
-    
-    X_test = np.loadtxt(splits_dir / "features_within_test.csv", delimiter=",")
-    y_test = np.loadtxt(splits_dir / "features_within_test.csv", delimiter=",", usecols=-1).astype(int)
-    
-    # Remove a última coluna (labels) dos dados de entrada
-    X_train = X_train[:, :-1]
-    X_val = X_val[:, :-1]
-    X_test = X_test[:, :-1]
-    
-    print(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}")
-    print(f"Features por amostra: {X_train.shape[1]}\n")
-    
-    # Treinar kNN
-    knn = KNNClassifier(k=5)
-    knn.fit(X_train, y_train)
-    
-    # ========== PREDIÇÕES E CÁLCULOS TUDO DE UMA VEZ ==========
-    
-    # Train predictions
-    y_pred_train = knn.predict(X_train)
-    train_acc = (y_pred_train == y_train).mean()
-    
-    # Val predictions
-    y_pred_val = knn.predict(X_val)
-    val_acc = (y_pred_val == y_val).mean()
-    
-    # Test predictions
-    y_pred_test = knn.predict(X_test)
-    test_acc = (y_pred_test == y_test).mean()
-    
-    # Calcular confusion matrix (only once)
-    from models.knn import confusion_matrix
-    cm_test, classes = confusion_matrix(y_test, y_pred_test)
-    
-    # ========== GUARDAR TUDO NUM FICHEIRO ==========
-    
-    results_dir = DATA_PROCESSED / "results"
-    results_dir.mkdir(parents=True, exist_ok=True)
-    results_file = results_dir / "knn_results.txt"
-    
-    with open(results_file, 'w') as f:
-        f.write("=" * 70 + "\n")
-        f.write("META 2 - kNN Classification Results\n")
-        f.write("=" * 70 + "\n\n")
+    for scenario in scenarios:
+        print(f"\n--- Cenário: {scenario.upper()} ---\n")
         
-        f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
-        f.write(f"Features por amostra: {X_train.shape[1]}\n\n")
-        
-        f.write(f"Train Accuracy: {train_acc:.4f}\n")
-        f.write(f"Val Accuracy: {val_acc:.4f}\n")
-        f.write(f"Test Accuracy: {test_acc:.4f}\n")
-        
-        f.write("\n" + "=" * 70 + "\n")
-        f.write("TEST SET - Detailed Metrics\n")
-        f.write("=" * 70 + "\n\n")
-        
-        # Confusion Matrix
-        f.write("Confusion Matrix (rows=true, cols=predicted):\n")
-        f.write("     " + "  ".join(f"A{c}" for c in classes) + "\n")
-        for i, true_class in enumerate(classes):
-            row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
-            f.write(f"A{true_class}  {row_str}\n")
-        
-        # Per-class metrics
-        f.write("\nPer-class metrics:\n")
-        f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
-        f.write("-" * 52 + "\n")
-        
-        for i, c in enumerate(classes):
-            tp = cm_test[i, i]
-            fp = cm_test[:, i].sum() - tp
-            fn = cm_test[i, :].sum() - tp
-            support = cm_test[i, :].sum()
+        try:
+            # Carregar dados do cenário (NPZ)
+            scenario_file = scenarios_dir / f"{scenario}.npz"
             
-            prec = tp / (tp + fp) if (tp + fp) > 0 else 0
-            rec = tp / (tp + fn) if (tp + fn) > 0 else 0
-            f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0
+            if not scenario_file.exists():
+                print(f"⚠ Ficheiro não encontrado: {scenario_file}")
+                continue
             
-            f.write(f"A{c:<7} {prec:<12.4f} {rec:<12.4f} {f1:<12.4f} {int(support):<10}\n")
-        
-        f.write("\n" + "=" * 70 + "\n")
-        f.write(f"Resultados guardados em: {results_file}\n")
-        f.write("=" * 70 + "\n")
-    
-    # Imprimir no terminal
-    print(f"\nTrain Accuracy: {train_acc:.4f}")
-    print(f"Val Accuracy: {val_acc:.4f}")
-    print(f"Test Accuracy: {test_acc:.4f}\n")
-    
-    print("Confusion Matrix (rows=true, cols=predicted):")
-    print("     " + "  ".join(f"A{c}" for c in classes))
-    for i, true_class in enumerate(classes):
-        row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
-        print(f"A{true_class}  {row_str}")
-    
-    print(f"\n✓ Resultados guardados em: {results_file}")
+            # Carregar dados
+            data = np.load(scenario_file)
+            X_train = data['train_X']
+            y_train = data['train_y']
+            X_val = data['val_X']
+            y_val = data['val_y']
+            X_test = data['test_X']
+            y_test = data['test_y']
+            
+            print(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}")
+            print(f"Features por amostra: {X_train.shape[1]}\n")
+            
+            # Treinar kNN
+            knn = KNNClassifier(k=5)
+            knn.fit(X_train, y_train)
+            
+            # Predições
+            y_pred_train = knn.predict(X_train)
+            train_acc = (y_pred_train == y_train).mean()
+            
+            y_pred_val = knn.predict(X_val)
+            val_acc = (y_pred_val == y_val).mean()
+            
+            y_pred_test = knn.predict(X_test)
+            test_acc = (y_pred_test == y_test).mean()
+            
+            # Confusion matrix
+            cm_test, classes = confusion_matrix(y_test, y_pred_test)
+            
+            # Guardar num ficheiro separado
+            results_file = results_dir / f"knn_results_{scenario}.txt"
+            
+            with open(results_file, 'w') as f:
+                f.write("=" * 70 + "\n")
+                f.write(f"META 2 - kNN Classification Results - {scenario.upper()}\n")
+                f.write("=" * 70 + "\n\n")
+                
+                f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
+                f.write(f"Features por amostra: {X_train.shape[1]}\n\n")
+                
+                f.write(f"Train Accuracy: {train_acc:.4f}\n")
+                f.write(f"Val Accuracy: {val_acc:.4f}\n")
+                f.write(f"Test Accuracy: {test_acc:.4f}\n\n")
+                
+                # Confusion Matrix
+                f.write("Confusion Matrix (rows=true, cols=predicted):\n")
+                f.write("     " + "  ".join(f"A{c}" for c in classes) + "\n")
+                for i, true_class in enumerate(classes):
+                    row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
+                    f.write(f"A{true_class}  {row_str}\n")
+                
+                # Per-class metrics
+                f.write("\nPer-class metrics:\n")
+                f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
+                f.write("-" * 52 + "\n")
+                
+                for i, c in enumerate(classes):
+                    tp = cm_test[i, i]
+                    fp = cm_test[:, i].sum() - tp
+                    fn = cm_test[i, :].sum() - tp
+                    support = cm_test[i, :].sum()
+                    
+                    prec = tp / (tp + fp) if (tp + fp) > 0 else 0
+                    rec = tp / (tp + fn) if (tp + fn) > 0 else 0
+                    f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0
+                    
+                    f.write(f"A{c:<7} {prec:<12.4f} {rec:<12.4f} {f1:<12.4f} {int(support):<10}\n")
+                
+                f.write("\n" + "=" * 70 + "\n")
+                f.write(f"Resultados guardados em: {results_file}\n")
+                f.write("=" * 70 + "\n")
+            
+            # Imprimir no terminal
+            print(f"Train Accuracy: {train_acc:.4f}")
+            print(f"Val Accuracy: {val_acc:.4f}")
+            print(f"Test Accuracy: {test_acc:.4f}\n")
+            
+            print("Confusion Matrix:")
+            print("     " + "  ".join(f"A{c}" for c in classes))
+            for i, true_class in enumerate(classes):
+                row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
+                print(f"A{true_class}  {row_str}")
+            
+            print(f"✓ Guardado em: {results_file}\n")
+            
+        except Exception as e:
+            print(f"❌ Erro no cenário {scenario}: {e}")
+            import traceback
+            traceback.print_exc()
 
 except Exception as e:
     print(f"[META2][4.1/4.2] Erro: {e}")
@@ -379,5 +384,3 @@ Extra improvements:
     - Ensembling models
 """
 
-
-print("\n=== META 2 - TODOS DEFINIDOS ===\n")
