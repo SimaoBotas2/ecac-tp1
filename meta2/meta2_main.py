@@ -229,7 +229,12 @@ Task 4.2 - Implement metrics:
 print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
 
 # Cenários a testar
-scenarios_dir = DATA_PROCESSED / "scenarios" / "features" / "between"
+data_type = "embeddings"  # ou "embeddings"
+scenario_split = "within"  # ou "within"
+
+print(f"📊 Análise com: {data_type.upper()} | {scenario_split.upper()}\n")
+
+scenarios_dir = DATA_PROCESSED / "scenarios" / data_type / scenario_split
 scenarios = ["all", "pca", "relief"]
 
 from models.knn import confusion_matrix
@@ -239,7 +244,7 @@ results_dir.mkdir(parents=True, exist_ok=True)
 
 try:
     for scenario in scenarios:
-        print(f"\n--- Cenário: {scenario.upper()} ---\n")
+        print(f"\n--- Cenário: {scenario.upper()} ({data_type} / {scenario_split}) ---\n")
         
         try:
             # Carregar dados do cenário (NPZ)
@@ -278,12 +283,13 @@ try:
             # Confusion matrix
             cm_test, classes = confusion_matrix(y_test, y_pred_test)
             
-            # Guardar num ficheiro separado
-            results_file = results_dir / f"knn_results_{scenario}.txt"
+            # Guardar num ficheiro separado com nome descritivo
+            results_file = results_dir / f"knn_results_{data_type}_{scenario_split}_{scenario}.txt"
             
             with open(results_file, 'w') as f:
                 f.write("=" * 70 + "\n")
-                f.write(f"META 2 - kNN Classification Results - {scenario.upper()}\n")
+                f.write(f"META 2 - kNN Classification Results\n")
+                f.write(f"Data Type: {data_type.upper()} | Split: {scenario_split.upper()} | Scenario: {scenario.upper()}\n")
                 f.write("=" * 70 + "\n\n")
                 
                 f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
@@ -316,10 +322,7 @@ try:
                     f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0
                     
                     f.write(f"A{c:<7} {prec:<12.4f} {rec:<12.4f} {f1:<12.4f} {int(support):<10}\n")
-                
-                f.write("\n" + "=" * 70 + "\n")
-                f.write(f"Resultados guardados em: {results_file}\n")
-                f.write("=" * 70 + "\n")
+
             
             # Imprimir no terminal
             print(f"Train Accuracy: {train_acc:.4f}")
@@ -332,7 +335,7 @@ try:
                 row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
                 print(f"A{true_class}  {row_str}")
             
-            print(f"✓ Guardado em: {results_file}\n")
+            print(f"✓ Guardado em: {results_file.name} ({data_type}/{scenario_split}/{scenario})\n")
             
         except Exception as e:
             print(f"❌ Erro no cenário {scenario}: {e}")

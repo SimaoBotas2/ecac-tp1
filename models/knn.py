@@ -6,8 +6,9 @@ import numpy as np
 from collections import Counter
 import sys
 from pathlib import Path
+import time
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from utils.progress import progress_bar
+from utils.progress import progress_bar, progress_with_time
 
 
 class KNNClassifier:
@@ -51,14 +52,19 @@ class KNNClassifier:
             X_test = X_test.reshape(1, -1)
         
         predictions = []
+        start_time = time.time()
+        
         for idx, x in enumerate(X_test):
-            progress_bar(idx, len(X_test), label="Predicting")
+            progress_with_time(idx, len(X_test), start_time, label="Predicting")
             
             distances = np.array([self._distance(x, xt) for xt in self.X_train])
             k_indices = np.argsort(distances)[:self.k]
             k_labels = self.y_train[k_indices]
             pred = Counter(k_labels).most_common(1)[0][0]
             predictions.append(pred)
+        
+        # Mostrar a última iteração
+        progress_with_time(len(X_test), len(X_test), start_time, label="Predicting")
         
         return np.array(predictions)
     

@@ -1,5 +1,6 @@
 # ======================== PROGRESS BAR ================================
 # Utilitário para mostrar progresso de execução
+# Funções neste ficheiro foram geradas por LLMs.
 
 import sys
 import time
