@@ -6,6 +6,13 @@ import sys
 import time
 
 
+def _format_duration(seconds: int) -> str:
+    """Formato mm:ss para o tempo em segundos."""
+    minutes = seconds // 60
+    secs = seconds % 60
+    return f"{minutes:02d}m{secs:02d}s"
+
+
 def progress_bar(current, total, label="", width=30):
     """
     Imprime uma barra de progresso simples.
@@ -37,8 +44,6 @@ def progress_bar(current, total, label="", width=30):
     if current >= total - 1:
         sys.stdout.write("\n")
         sys.stdout.flush()
-
-
 def progress_with_time(current, total, start_time, label="", width=30):
     """
     Imprime barra de progresso com tempo decorrido e ETA.
@@ -68,12 +73,12 @@ def progress_with_time(current, total, start_time, label="", width=30):
     if current > 0:
         rate = elapsed / current
         eta = (total - current) * rate
-        eta_str = f"{int(eta)}s"
+        eta_str = _format_duration(int(eta))
     else:
         eta_str = "?"
     
     pct_str = f"{percent*100:.1f}%"
-    time_str = f"{int(elapsed)}s"
+    time_str = _format_duration(int(elapsed))
     
     prog_str = f"\r{label} [{bar}] {pct_str} ({current}/{total}) | {time_str} | ETA: {eta_str}"
     

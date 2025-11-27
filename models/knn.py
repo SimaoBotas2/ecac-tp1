@@ -7,6 +7,24 @@ from collections import Counter
 import sys
 from pathlib import Path
 import time
+
+# ============== CONFIGURAÇÃO DE GPU ==============
+# Mude para True para usar GPU (requer CuPy instalado)
+USE_GPU = True
+
+# Tentar importar CuPy se GPU estiver ativada
+if USE_GPU:
+    try:
+        import cupy as cp
+        GPU_AVAILABLE = True
+    except ImportError:
+        print("Aviso: CuPy não encontrado. Caindo para CPU.")
+        cp = None
+        GPU_AVAILABLE = False
+else:
+    cp = None
+    GPU_AVAILABLE = False
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from utils.progress import progress_bar, progress_with_time
 
@@ -30,26 +48,65 @@ class KNNClassifier:
         self.is_fitted = False
     
     def fit(self, X_train, y_train):
-        """Armazena dados de treino."""
+        """Armazena dados de treino (em CPU e GPU se disponível)."""
+        # Sempre manter em CPU para compatibilidade
         self.X_train = np.array(X_train)
         self.y_train = np.array(y_train)
+        
+        # Se GPU está ativa e disponível, copiar para GPU
+        self.X_train_gpu = None
+        if GPU_AVAILABLE:
+            try:
+                self.X_train_gpu = cp.asarray(self.X_train)
+            except Exception as e:
+                print(f"Aviso: Não foi possível copiar dados para GPU: {e}")
+                self.X_train_gpu = None
+        
         self.is_fitted = True
         return self
     
-    def _distance(self, x1, x2):
-        """Calcula distância euclidiana ou manhattan."""
+    def _compute_distances_vectorized(self, x_test, X_train, xp):
+        """Calcula vetorizado as distâncias entre x_test e todos os pontos em X_train.
+        
+        Parameters
+        ----------
+        x_test : array-like
+            Ponto de teste individual.
+        X_train : array-like
+            Conjunto de treino (pode ser NumPy ou CuPy array).
+        xp : module
+            NumPy ou CuPy, dependendo do tipo de X_train.
+        
+        Returns
+        -------
+        distances : array
+            Vetor de distâncias (no mesmo tipo de xp).
+        """
+        # Calcular diferenças
+        diffs = X_train - x_test
+        
         if self.distance_metric == 'euclidean':
-            return np.sqrt(np.sum((x1 - x2) ** 2))
+            # Distância euclidiana: sqrt(sum((x1 - x2)^2))
+            sq_diffs = diffs ** 2
+            sum_sq = xp.sum(sq_diffs, axis=1)
+            distances = xp.sqrt(sum_sq)
         else:
-            return np.sum(np.abs(x1 - x2))
+            # Distância manhattan: sum(|x1 - x2|)
+            abs_diffs = xp.abs(diffs)
+            distances = xp.sum(abs_diffs, axis=1)
+        
+        return distances
     
     def predict(self, X_test):
-        """Prediz classes para X_test."""
+        """Prediz classes para X_test. Usa GPU se disponível e ativada."""
         if not self.is_fitted:
             raise RuntimeError("Modelo não está treinado.")
         
         if X_test.ndim == 1:
             X_test = X_test.reshape(1, -1)
+        
+        # Decidir se usar GPU ou CPU
+        usar_gpu = GPU_AVAILABLE and self.X_train_gpu is not None
         
         predictions = []
         start_time = time.time()
@@ -57,9 +114,22 @@ class KNNClassifier:
         for idx, x in enumerate(X_test):
             progress_with_time(idx, len(X_test), start_time, label="Predicting")
             
-            distances = np.array([self._distance(x, xt) for xt in self.X_train])
+            # Calcular distâncias (GPU ou CPU)
+            if usar_gpu:
+                # Usar GPU
+                x_gpu = cp.asarray(x)
+                distances_gpu = self._compute_distances_vectorized(x_gpu, self.X_train_gpu, cp)
+                # Converter de volta para NumPy para argsort e Counter
+                distances = cp.asnumpy(distances_gpu)
+            else:
+                # Usar CPU
+                distances = self._compute_distances_vectorized(x, self.X_train, np)
+            
+            # Encontrar k vizinhos mais próximos
             k_indices = np.argsort(distances)[:self.k]
             k_labels = self.y_train[k_indices]
+            
+            # Voto por maioria
             pred = Counter(k_labels).most_common(1)[0][0]
             predictions.append(pred)
         

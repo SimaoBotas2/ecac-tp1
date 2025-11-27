@@ -230,9 +230,9 @@ print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
 
 # Cenários a testar
 data_type = "embeddings"  # ou "embeddings"
-scenario_split = "within"  # ou "within"
+scenario_split = "between"  # ou "within"
 
-print(f"📊 Análise com: {data_type.upper()} | {scenario_split.upper()}\n")
+print(f" Análise com: {data_type.upper()} | {scenario_split.upper()}\n")
 
 scenarios_dir = DATA_PROCESSED / "scenarios" / data_type / scenario_split
 scenarios = ["all", "pca", "relief"]
