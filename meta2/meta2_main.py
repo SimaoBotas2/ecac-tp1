@@ -67,6 +67,7 @@ print(f"Após filtrar atividades 1-7: {dados.shape}")
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 
+"""
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
     try:
@@ -85,6 +86,8 @@ else:
         print(f"  Imbalance ratio (max/min): {ratio:.2f}")
     else:
         print("  Sem amostras após filtragem.")
+
+"""
 
 # ======================================================================
 #  1.2 — SMOTE
@@ -224,13 +227,13 @@ Task 4.2 - Implement metrics:
       - precision
       - recall
       - F1
-"""
+
 
 print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
 
 # Cenários a testar
-data_type = "embeddings"  # ou "embeddings"
-scenario_split = "between"  # ou "within"
+data_type = "embeddings"  # "features" ou "embeddings"
+scenario_split = "within"  # "between" ou "within"
 
 print(f" Análise com: {data_type.upper()} | {scenario_split.upper()}\n")
 
@@ -251,7 +254,7 @@ try:
             scenario_file = scenarios_dir / f"{scenario}.npz"
             
             if not scenario_file.exists():
-                print(f"⚠ Ficheiro não encontrado: {scenario_file}")
+                print(f"Ficheiro não encontrado: {scenario_file}")
                 continue
             
             # Carregar dados
@@ -267,7 +270,8 @@ try:
             print(f"Features por amostra: {X_train.shape[1]}\n")
             
             # Treinar kNN
-            knn = KNNClassifier(k=5)
+            k_value = 10
+            knn = KNNClassifier(k=k_value)
             knn.fit(X_train, y_train)
             
             # Predições
@@ -283,13 +287,13 @@ try:
             # Confusion matrix
             cm_test, classes = confusion_matrix(y_test, y_pred_test)
             
-            # Guardar num ficheiro separado com nome descritivo
-            results_file = results_dir / f"knn_results_{data_type}_{scenario_split}_{scenario}.txt"
+            # Guardar num ficheiro separado com nome descritivo (incluindo k)
+            results_file = results_dir / f"knn_results_{data_type}_{scenario_split}_{scenario}_k{k_value}.txt"
             
             with open(results_file, 'w') as f:
                 f.write("=" * 70 + "\n")
                 f.write(f"META 2 - kNN Classification Results\n")
-                f.write(f"Data Type: {data_type.upper()} | Split: {scenario_split.upper()} | Scenario: {scenario.upper()}\n")
+                f.write(f"k={k_value} | Data Type: {data_type.upper()} | Split: {scenario_split.upper()} | Scenario: {scenario.upper()}\n")
                 f.write("=" * 70 + "\n\n")
                 
                 f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
@@ -311,17 +315,20 @@ try:
                 f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
                 f.write("-" * 52 + "\n")
                 
-                for i, c in enumerate(classes):
-                    tp = cm_test[i, i]
-                    fp = cm_test[:, i].sum() - tp
-                    fn = cm_test[i, :].sum() - tp
-                    support = cm_test[i, :].sum()
+                for i, activity_class in enumerate(classes):
+                    # Calcular componentes da matriz de confusão
+                    true_positives = cm_test[i, i]
+                    false_positives = cm_test[:, i].sum() - true_positives
+                    false_negatives = cm_test[i, :].sum() - true_positives
+                    num_samples = cm_test[i, :].sum()
                     
-                    prec = tp / (tp + fp) if (tp + fp) > 0 else 0
-                    rec = tp / (tp + fn) if (tp + fn) > 0 else 0
-                    f1 = 2 * (prec * rec) / (prec + rec) if (prec + rec) > 0 else 0
+                    # Calcular métricas por classe
+                    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
+                    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
+                    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
                     
-                    f.write(f"A{c:<7} {prec:<12.4f} {rec:<12.4f} {f1:<12.4f} {int(support):<10}\n")
+                    # Guardar linha no ficheiro
+                    f.write(f"A{activity_class:<7} {precision:<12.4f} {recall:<12.4f} {f1_score:<12.4f} {int(num_samples):<10}\n")
 
             
             # Imprimir no terminal
@@ -335,10 +342,10 @@ try:
                 row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
                 print(f"A{true_class}  {row_str}")
             
-            print(f"✓ Guardado em: {results_file.name} ({data_type}/{scenario_split}/{scenario})\n")
+            print(f"Guardado em: {results_file.name} ({data_type}/{scenario_split}/{scenario})\n")
             
         except Exception as e:
-            print(f"❌ Erro no cenário {scenario}: {e}")
+            print(f"Erro no cenário {scenario}: {e}")
             import traceback
             traceback.print_exc()
 
@@ -347,15 +354,13 @@ except Exception as e:
     import traceback
     traceback.print_exc()
 
-
+"""
 # ======================================================================
 # TODO 5 — EVALUATION PIPELINE
 # ======================================================================
-"""
-Task 5.1 - Hyperparameter tuning (k)
-Task 5.2 - Report confusion matrices, compare
-Task 5.3 - Hypothesis testing (repeat splits for distributions)
-"""
+from models import compare_results as results
+
+results.compare_k_values()
 
 
 # ======================================================================
