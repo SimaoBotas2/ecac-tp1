@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 import time
 
-# ============== CONFIGURAÇÃO DE GPU ==============
+
 # Mude para True para usar GPU (requer CuPy instalado)
 USE_GPU = True
 
@@ -26,7 +26,7 @@ else:
     GPU_AVAILABLE = False
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from utils.progress import progress_bar, progress_with_time
+from utils.progress import progress_with_time
 
 
 class KNNClassifier:

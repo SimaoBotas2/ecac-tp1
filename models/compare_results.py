@@ -152,7 +152,7 @@ def compare_k_values():
     # Melhor scenario
     scenario_stats = df.groupby('Scenario')['Test Accuracy'].mean().sort_values(ascending=False)
     best_scenario = scenario_stats.index[0]
-    print(f"• Melhor scenario: {best_scenario} (média: {scenario_stats.iloc[0]:.4f})")
+    print(f" Melhor scenario: {best_scenario} (média: {scenario_stats.iloc[0]:.4f})")
     
     print("\n" + "=" * 80)
 

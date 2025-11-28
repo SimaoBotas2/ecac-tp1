@@ -356,7 +356,7 @@ except Exception as e:
 
 """
 # ======================================================================
-# TODO 5 — EVALUATION PIPELINE
+# 5 — EVALUATION PIPELINE
 # ======================================================================
 from models import compare_results as results
 
