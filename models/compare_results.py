@@ -136,7 +136,7 @@ def compare_k_values():
     
     # 5. Recomendações
     print("=" * 80)
-    print("RECOMENDAÇÕES (Task 5.1 - Hyperparameter Tuning):\n")
+    print("RECOMENDAÇÕES (Hyperparameter Tuning):\n")
     
     # Melhor k geral baseado em validation
     k_stats = df.groupby('k')['Val Accuracy'].agg(['mean', 'std', 'count'])
@@ -152,10 +152,6 @@ def compare_k_values():
     scenario_stats = df.groupby('Scenario')['Val Accuracy'].mean().sort_values(ascending=False)
     best_scenario = scenario_stats.index[0]
     print(f"• Melhor scenario (Val Accuracy): {best_scenario} (média: {scenario_stats.iloc[0]:.4f})")
-    
-    print("\n" + "=" * 80)
-    print("PRÓXIMO PASSO: Retreinar com k={} usando TRAIN+VALIDATION, avaliar em TEST".format(best_k))
-    print("=" * 80)
 
 
 if __name__ == "__main__":
