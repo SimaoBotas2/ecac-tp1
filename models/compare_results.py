@@ -15,13 +15,11 @@ RESULTS_DIR = ROOT / "data" / "processed" / "results"
 
 
 def extract_metrics_from_file(file_path):
-    """Extrai métricas (Test Accuracy) de um ficheiro de resultados."""
+    """Extrai métricas (Val Accuracy) de um ficheiro de resultados para seleção de k (Task 5.1)."""
     try:
         with open(file_path, 'r') as f:
             content = f.read()
-        
-        # Procurar por Test Accuracy
-        match = re.search(r'Test Accuracy:\s+([\d.]+)', content)
+        match = re.search(r'Val Accuracy:\s+([\d.]+)', content)
         if match:
             return float(match.group(1))
     except Exception as e:
@@ -76,7 +74,7 @@ def compare_k_values():
                 'Split': info['split_type'].upper(),
                 'Scenario': info['scenario'].upper(),
                 'k': info['k'],
-                'Test Accuracy': accuracy
+                'Val Accuracy': accuracy
             })
     
     if not comparison_data:
@@ -87,12 +85,13 @@ def compare_k_values():
     df = pd.DataFrame(comparison_data)
     
     print("=" * 80)
-    print("COMPARAÇÃO DE RESULTADOS - DIFERENTES VALORES DE k")
+    print("COMPARAÇÃO DE RESULTADOS - DIFERENTES VALORES DE k (Task 5.1)")
+    print("NOTA: Usando VALIDATION Accuracy para seleção de k (sem data leakage)")
     print("=" * 80 + "\n")
     
-    # 1. Ordenar por Test Accuracy (melhor no topo)
-    print("RANKING GERAL (Ordenado por Test Accuracy):\n")
-    df_sorted = df.sort_values('Test Accuracy', ascending=False)
+    # 1. Ordenar por Val Accuracy (melhor no topo)
+    print("RANKING GERAL (Ordenado por Val Accuracy para Seleção de k):\n")
+    df_sorted = df.sort_values('Val Accuracy', ascending=False)
     print(df_sorted.to_string(index=False))
     print("\n")
     
@@ -103,8 +102,8 @@ def compare_k_values():
     for data_type in df['Data Type'].unique():
         df_data = df[df['Data Type'] == data_type]
         print(f"--- {data_type} ---")
-        df_data_sorted = df_data.sort_values('Test Accuracy', ascending=False)
-        print(df_data_sorted[['Split', 'Scenario', 'k', 'Test Accuracy']].to_string(index=False))
+        df_data_sorted = df_data.sort_values('Val Accuracy', ascending=False)
+        print(df_data_sorted[['Split', 'Scenario', 'k', 'Val Accuracy']].to_string(index=False))
         print()
     
     # 3. Comparação por valor de k
@@ -113,48 +112,50 @@ def compare_k_values():
     
     for k in sorted(df['k'].unique()):
         df_k = df[df['k'] == k]
-        avg_acc = df_k['Test Accuracy'].mean()
-        max_acc = df_k['Test Accuracy'].max()
-        min_acc = df_k['Test Accuracy'].min()
+        avg_acc = df_k['Val Accuracy'].mean()
+        max_acc = df_k['Val Accuracy'].max()
+        min_acc = df_k['Val Accuracy'].min()
         
         print(f"k = {k}:")
-        print(f"  Média: {avg_acc:.4f}")
-        print(f"  Máximo: {max_acc:.4f}")
-        print(f"  Mínimo: {min_acc:.4f}")
+        print(f"  Média Val Accuracy: {avg_acc:.4f}")
+        print(f"  Máximo Val Accuracy: {max_acc:.4f}")
+        print(f"  Mínimo Val Accuracy: {min_acc:.4f}")
         print(f"  Cenários: {len(df_k)}")
         print()
     
     # 4. Melhor combinação
     print("=" * 80)
-    print("MELHOR RESULTADO:\n")
+    print("MELHOR k PARA SELEÇÃO (baseado em Val Accuracy):\n")
     best_row = df_sorted.iloc[0]
     print(f"Data Type: {best_row['Data Type']}")
     print(f"Split: {best_row['Split']}")
     print(f"Scenario: {best_row['Scenario']}")
     print(f"k: {best_row['k']}")
-    print(f"Test Accuracy: {best_row['Test Accuracy']:.4f}")
+    print(f"Val Accuracy: {best_row['Val Accuracy']:.4f}")
     print()
     
     # 5. Recomendações
     print("=" * 80)
-    print("RECOMENDAÇÕES:\n")
+    print("RECOMENDAÇÕES (Task 5.1 - Hyperparameter Tuning):\n")
     
-    # Melhor k geral
-    k_stats = df.groupby('k')['Test Accuracy'].agg(['mean', 'std', 'count'])
+    # Melhor k geral baseado em validation
+    k_stats = df.groupby('k')['Val Accuracy'].agg(['mean', 'std', 'count'])
     best_k = k_stats['mean'].idxmax()
-    print(f"• Melhor valor de k (média): k={best_k} (média: {k_stats.loc[best_k, 'mean']:.4f})")
+    print(f"• Melhor valor de k (média Val Accuracy): k={best_k} (média: {k_stats.loc[best_k, 'mean']:.4f})")
     
     # Melhor combinação data_type + split
-    combo_stats = df.groupby(['Data Type', 'Split'])['Test Accuracy'].mean().sort_values(ascending=False)
+    combo_stats = df.groupby(['Data Type', 'Split'])['Val Accuracy'].mean().sort_values(ascending=False)
     best_combo = combo_stats.index[0]
-    print(f"• Melhor combinação Data-Split: {best_combo[0]} + {best_combo[1]} (média: {combo_stats.iloc[0]:.4f})")
+    print(f"• Melhor combinação Data-Split (Val Accuracy): {best_combo[0]} + {best_combo[1]} (média: {combo_stats.iloc[0]:.4f})")
     
     # Melhor scenario
-    scenario_stats = df.groupby('Scenario')['Test Accuracy'].mean().sort_values(ascending=False)
+    scenario_stats = df.groupby('Scenario')['Val Accuracy'].mean().sort_values(ascending=False)
     best_scenario = scenario_stats.index[0]
-    print(f" Melhor scenario: {best_scenario} (média: {scenario_stats.iloc[0]:.4f})")
+    print(f"• Melhor scenario (Val Accuracy): {best_scenario} (média: {scenario_stats.iloc[0]:.4f})")
     
     print("\n" + "=" * 80)
+    print("PRÓXIMO PASSO: Retreinar com k={} usando TRAIN+VALIDATION, avaliar em TEST".format(best_k))
+    print("=" * 80)
 
 
 if __name__ == "__main__":
