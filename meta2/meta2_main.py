@@ -356,29 +356,31 @@ except Exception as e:
 
 """
 # ======================================================================
-# 5 — EVALUATION PIPELINE
+# TODO 5 — EVALUATION PIPELINE
 # ======================================================================
-from models import compare_results as results
+"""from models import compare_results as results
 
 results.compare_k_values()
-
+"""
 
 # ======================================================================
 # TODO 6 — DEPLOYMENT FUNCTION
 # ======================================================================
-"""
-Task 6:
-Create pipeline function:
+from meta2.predict_new import (
+    train_and_save_best_model,
+    load_model,
+    predict_activity,
+)
 
-predict(segment_256x9):
-    - normalize
-    - split into windows
-    - extract features OR embeddings
-    - apply PCA / ReliefF if required
-    - run classifier
-    - return predicted activity
-"""
+models_dir = ROOT / 'models' / 'trained_models'
 
+#alterar estes parâmetros conforme o melhor modelo
+info = train_and_save_best_model(data_type='features', split_type='within', scenario='all', k=10, save_dir=models_dir)
+model_data = load_model(info['model_path'])
+raw = np.random.randn(256, 9)
+activity, confidence = predict_activity(raw, model_data)
+
+print(f"\nPredicted Activity: A{activity} with confidence {confidence:.4f}")
 
 # ======================================================================
 # TODO 7 — GO FURTHER (BONUS)

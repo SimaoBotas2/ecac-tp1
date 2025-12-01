@@ -119,7 +119,6 @@ class KNNClassifier:
                 # Usar GPU
                 x_gpu = cp.asarray(x)
                 distances_gpu = self._compute_distances_vectorized(x_gpu, self.X_train_gpu, cp)
-                # Converter de volta para NumPy para argsort e Counter
                 distances = cp.asnumpy(distances_gpu)
             else:
                 # Usar CPU
