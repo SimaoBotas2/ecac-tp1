@@ -1,256 +1,333 @@
-# ======================== TASK 6: DEPLOYMENT ================================
-# ECAC 2025 – TP1 (META 2) – Task 6
-# Step 1: Treina o melhor modelo com train+val e guarda-o
-# Step 2: Cria função que carrega e usa o modelo para predizer
+# TASK 6: DEPLOYMENT - Predição com kNN Model
 
 import sys
 from pathlib import Path
 import numpy as np
 import pickle
-from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
 from models.knn import KNNClassifier
-from meta1.features import feature_extractor as fe
-from meta1.features import feature_selection as fs
+from meta2.pipeline_predict import process_csv_file, select_random_csvs
 
-# ============================================================================
-# STEP 1: TREINAR E GUARDAR O MELHOR MODELO
-# ============================================================================
 
-def train_and_save_best_model(data_type='features',
-                               split_type='within',
-                               scenario='all',
-                               k=10,
-                               save_dir=None):
+def evaluate_model(
+    data_type='features',
+    split_type='within',
+    scenario='all',
+    k=10,
+    X_test_custom=None,
+    y_test_custom=None,
+    verbose=True,
+):
     """
-    Treina o melhor modelo com train+val combinados e guarda.
+    Carrega/treina modelo e avalia em dados customizados.
     
     Parâmetros:
     -----------
-    data_type : str ('features' ou 'embeddings')
-    split_type : str ('within' ou 'between')
-    scenario : str ('all', 'pca', 'relief')
-    k : int (número de vizinhos do kNN)
-    save_dir : Path (diretório para guardar modelo)
+    data_type : str
+        Tipo de dados ('features' ou 'embeddings')
+    split_type : str
+        Tipo de split ('within' ou 'between')
+    scenario : str
+        Cenário ('all', 'pca', 'relief')
+    k : int
+        Número de vizinhos
+    X_test_custom : array ou None
+        Features de teste customizadas
+    y_test_custom : array ou None
+        Etiquetas de teste customizadas
+    verbose : bool
+        Se True, imprime informações
     
     Returns:
     --------
-    model_info : dict com informações do modelo guardado
+    dict com:
+        - test_accuracy: acurácia no teste
+        - y_test: etiquetas reais
+        - y_pred: etiquetas preditas
     """
-    
-    if save_dir is None:
-        save_dir = ROOT / "models" / "trained_models"
-    save_dir.mkdir(parents=True, exist_ok=True)
-    # Nome do ficheiro do modelo e caminho
-    model_filename = f"model_{data_type}_{split_type}_{scenario}_k{k}.pkl"
-    model_path = save_dir / model_filename
-
-    # Se já existir, não treinar de novo — carregar info e devolver
-    if model_path.exists():
-        try:
-            with open(model_path, 'rb') as f:
-                existing = pickle.load(f)
-            print(f"\n[Task6] Modelo já existente: {model_path}. A reutilizar.")
-            return {
-                'model_path': model_path,
-                'data_type': existing.get('data_type', data_type),
-                'split_type': existing.get('split_type', split_type),
-                'scenario': existing.get('scenario', scenario),
-                'k': existing.get('k', k),
-                'test_accuracy': existing.get('test_accuracy', None),
-            }
-        except Exception as e:
-            print(f"[Task6] Aviso: falha ao ler modelo existente ({e}). Será re-treinado.")
-
-    print(f"\n{'='*70}")
-    print(f"TREINAR E GUARDAR MELHOR MODELO")
-    print(f"{'='*70}")
-    print(f"\nConfigurações:")
-    print(f"  Data Type: {data_type}")
-    print(f"  Split Type: {split_type}")
-    print(f"  Scenario: {scenario}")
-    print(f"  k: {k}")
-    
-    # 1. Carregar dados de treino
     data_dir = ROOT / "data" / "processed"
     scenarios_dir = data_dir / "scenarios" / data_type / split_type
     scenario_file = scenarios_dir / f"{scenario}.npz"
-    
+
     if not scenario_file.exists():
-        raise FileNotFoundError(f"Ficheiro não encontrado: {scenario_file}")
-    
-    print(f"\nCarregando dados de {scenario_file.name}...")
+        raise FileNotFoundError(f"Cenário não encontrado: {scenario_file}")
+
+    model_dir = ROOT / "models" / "trained_models"
+    model_dir.mkdir(parents=True, exist_ok=True)
+    model_file = model_dir / f"model_eval_{data_type}_{split_type}_{scenario}_k{k}.pkl"
+
     data = np.load(scenario_file)
     X_train = data['train_X']
     y_train = data['train_y']
     X_val = data['val_X']
     y_val = data['val_y']
-    X_test = data['test_X']
-    y_test = data['test_y']
-    
-    print(f"  Train: {X_train.shape[0]} amostras")
-    print(f"  Val: {X_val.shape[0]} amostras")
-    print(f"  Test: {X_test.shape[0]} amostras")
-    # 2. Combinar train + val
-    print(f"\nCombinando train + val para retreinar...")
-    X_train_val = np.vstack([X_train, X_val])
-    y_train_val = np.hstack([y_train, y_val])
-    print(f"  Train+Val: {X_train_val.shape[0]} amostras (combinadas)")
-    
-    # 3. Normalizar
-    print(f"\nNormalizando dados...")
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(X_train_val)
-    
-    # 4. Aplicar PCA se necessário
-    pca_model = None
-    if scenario == 'pca':
-        print(f"Aplicando PCA (90% variância)...")
-        pca_model = PCA(n_components=0.9)
-        X_scaled = pca_model.fit_transform(X_scaled)
-        print(f"Dimensões após PCA: {X_scaled.shape[1]}")
-    
-    # 5. Aplicar ReliefF se necessário
-    reliefF_indices = None
-    if scenario == 'relief':
-        print(f"Selecionando top 15 features com ReliefF...")
-        _, relief_scores = fs.reliefF_selection(X_train_val, y_train_val, top_n=15)
-        reliefF_indices = np.argsort(relief_scores)[::-1][:15]
-        X_scaled = X_scaled[:, reliefF_indices]
-        print(f"  Features selecionadas: {len(reliefF_indices)}")
-    
-    # 6. Treinar kNN
-    print(f"\nTreinando kNN com k={k}...")
-    knn_model = KNNClassifier(k=k)
-    knn_model.fit(X_scaled, y_train_val)
-    
-    # 7. Avaliar no test set (para informação)
-    print(f"\nAvaliando no test set...")
-    X_test_scaled = scaler.transform(X_test)
-    if scenario == 'pca':
-        X_test_scaled = pca_model.transform(X_test_scaled)
-    elif scenario == 'relief':
-        X_test_scaled = X_test_scaled[:, reliefF_indices]
-    
-    y_pred_test = knn_model.predict(X_test_scaled)
-    test_accuracy = (y_pred_test == y_test).mean()
-    print(f"  Test Accuracy: {test_accuracy:.4f}")
-    
-    # 8. Guardar modelo
-    
-    model_data = {
-        'knn_model': knn_model,
-        'scaler': scaler,
-        'pca_model': pca_model,
-        'reliefF_indices': reliefF_indices,
-        'data_type': data_type,
-        'split_type': split_type,
-        'scenario': scenario,
-        'k': k,
-        'test_accuracy': test_accuracy,
-        'sampling_rate': 50  # Hz
-    }
-    
-    with open(model_path, 'wb') as f:
-        pickle.dump(model_data, f)
-    
-    print(f"\nModelo guardado em: {model_path}")
-    print(f"{'='*70}\n")
-    
+    X_test = X_test_custom if X_test_custom is not None else data['test_X']
+    y_test = y_test_custom if y_test_custom is not None else data['test_y']
+
+    if verbose:
+        print(f"\n[Evaluation] Cenário: {scenario} ({data_type}/{split_type}, k={k})")
+        print(f"  Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]} samples")
+        print(f"  Features: {X_train.shape[1]}\n")
+
+    if model_file.exists():
+        if verbose:
+            print(f"Carregando modelo guardado: {model_file.name}")
+        with open(model_file, 'rb') as f:
+            knn = pickle.load(f)
+    else:
+        if verbose:
+            print(f"Modelo não encontrado. Treinando kNN com k={k}...")
+        
+        X_train_val = np.vstack([X_train, X_val])
+        y_train_val = np.hstack([y_train, y_val])
+        
+        if verbose:
+            print(f"  Treinando com {X_train_val.shape[0]} samples (train + val)")
+        
+        knn = KNNClassifier(k=k)
+        knn.fit(X_train_val, y_train_val)
+        
+        if verbose:
+            print(f"Guardando modelo: {model_file.name}")
+        with open(model_file, 'wb') as f:
+            pickle.dump(knn, f)
+
+    if verbose:
+        print("Avaliando...\n")
+    y_pred_test = knn.predict(X_test)
+    acc_test = (y_pred_test == y_test).mean()
+
+    if verbose:
+        print(f"Test Accuracy: {acc_test:.4f}\n")
+        print("Atividade Real vs Predicted:")
+        print(f"{'Real':<8} {'Predicted':<12} {'Status':<10}")
+        print("-" * 30)
+        for real, pred in zip(y_test, y_pred_test):
+            status = "Correto" if real == pred else "Errado"
+            print(f"A{real:<7} A{pred:<11} {status}")
+
     return {
-        'model_path': model_path,
-        'data_type': data_type,
-        'split_type': split_type,
-        'scenario': scenario,
-        'k': k,
-        'test_accuracy': test_accuracy
+        'test_accuracy': acc_test,
+        'y_test': y_test,
+        'y_pred': y_pred_test,
     }
 
 
-# ============================================================================
-# STEP 2: FUNÇÃO DE DEPLOYMENT
-# ============================================================================
-
-def load_model(model_path):
-    """Carrega modelo guardado."""
-    with open(model_path, 'rb') as f:
-        model_data = pickle.load(f)
-    return model_data
-
-
-def predict_activity(raw_data_256x9, model_data):
+def predict_from_array(
+    raw_data,
+    activity_label,
+    data_type='features',
+    split_type='within',
+    scenario='all',
+    k=10,
+    verbose=True,
+):
     """
-    Task 6 - Step 2: Prediz atividade para dados brutos.
+    Prediz atividade a partir de um array raw de sensores.
     
     Parâmetros:
     -----------
-    raw_data_256x9 : np.ndarray
-        Shape (256, 9) com [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z]
-    model_data : dict
-        Modelo carregado com load_model()
+    raw_data : np.ndarray
+        Array de shape (256, 9) com [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z]
+    activity_label : int
+        Etiqueta real da atividade (apenas para info/validação)
+    data_type : str
+        Tipo de dados ('features' ou 'embeddings')
+    split_type : str
+        Tipo de split ('within' ou 'between')
+    scenario : str
+        Cenário ('all', 'pca', 'relief')
+    k : int
+        Número de vizinhos
+    verbose : bool
+        Se True, imprime resultados
     
     Returns:
     --------
-    predicted_activity : int (1-7)
-    confidence : float (0-1, proporção de vizinhos que votam para a classe)
+    dict com:
+        - activity_predicted: atividade predita
+        - activity_real: atividade real
+        - accuracy: se acertou (1.0 ou 0.0)
+        - raw_shape: shape do input
+    
+    Raises:
+    -------
+    ValueError se shape não for (256, 9)
     """
+    raw_data = np.asarray(raw_data, dtype=np.float32)
     
-    # Validar input
-    if raw_data_256x9.shape != (256, 9):
-        raise ValueError(f"Input deve ser shape (256, 9), recebido {raw_data_256x9.shape}")
+    if raw_data.shape != (256, 9):
+        raise ValueError(f"Shape esperado: (256, 9), recebido: {raw_data.shape}")
     
-    # Extrair componentes do modelo
-    knn_model = model_data['knn_model']
-    scaler = model_data['scaler']
-    pca_model = model_data['pca_model']
-    reliefF_indices = model_data['reliefF_indices']
-    data_type = model_data['data_type']
-    scenario = model_data['scenario']
-    sampling_rate = model_data['sampling_rate']
+    if verbose:
+        print(f"\n[Predict] Array recebido com shape {raw_data.shape}")
+        print(f"  Atividade real: A{activity_label}\n")
     
-    # 1. Separar sensores
-    accel = raw_data_256x9[:, 0:3].astype(float)
-    gyro = raw_data_256x9[:, 3:6].astype(float)
-    mag = raw_data_256x9[:, 6:9].astype(float)
+    # Extrair sensores (primeiras 250 linhas para feature extraction)
+    feature_window = raw_data[:250, :]
     
-    # 2. Extrair features
-    if data_type == 'features':
-        # Extrair features temporais + espectrais
-        features_dict = fe.FeatureExtractor.extract_window_features(
-            accel, gyro, mag, sampling_rate
+    accel_data = feature_window[:, 0:3]
+    gyro_data = feature_window[:, 3:6]
+    mag_data = feature_window[:, 6:9]
+    
+    # Atividades para extract_features_4_2
+    activities_for_extract = np.full(250, activity_label, dtype=int)
+    
+    try:
+        from meta1.features import feature_extractor as fe
+        X_features_list, _, _ = fe.extract_features_4_2(
+            accel_data, gyro_data, mag_data, activities_for_extract,
+            sampling_rate=50, participant_ids=None
         )
-        feature_vector = np.array(list(features_dict.values())).reshape(1, -1)
-    else:
-        raise NotImplementedError("Embeddings requerem modelo pré-treinado - não implementado aqui")
+        if len(X_features_list) == 0:
+            raise ValueError("Nenhuma janela válida extraída")
+        X_features = np.array(X_features_list[0]).reshape(1, -1)
+    except Exception as e:
+        raise RuntimeError(f"Erro ao extrair features: {e}")
     
-    # 3. Normalizar
-    feature_scaled = scaler.transform(feature_vector)
+    # Carregar scaler e escalar
+    scenario_file = ROOT / "data" / "processed" / "scenarios" / data_type / split_type / f"{scenario}.npz"
     
-    # 4. Aplicar PCA/ReliefF
-    if scenario == 'pca':
-        feature_scaled = pca_model.transform(feature_scaled)
-    elif scenario == 'relief':
-        feature_scaled = feature_scaled[:, reliefF_indices]
+    if not scenario_file.exists():
+        raise FileNotFoundError(f"Cenário não encontrado: {scenario_file}")
     
-    # 5. Predizer com kNN
-    predicted_activity = knn_model.predict(feature_scaled)[0]
+    data = np.load(scenario_file)
+    meta_mean = data['meta_scaler_mean'].astype(np.float64)
+    meta_scale = data['meta_scaler_scale'].astype(np.float64)
+    X_scaled = (X_features - meta_mean) / meta_scale
     
-    # 6. Calcular confiança (% de vizinhos que votam para essa classe)
-    from collections import Counter
-    distances = np.linalg.norm(
-        knn_model.X_train - feature_scaled,
-        axis=1
+    # Avaliar modelo
+    eval_results = evaluate_model(
+        data_type=data_type,
+        split_type=split_type,
+        scenario=scenario,
+        k=k,
+        X_test_custom=X_scaled,
+        y_test_custom=np.array([activity_label]),
+        verbose=verbose,
     )
-    k_nearest_indices = np.argsort(distances)[:knn_model.k]
-    k_nearest_labels = knn_model.y_train[k_nearest_indices]
     
-    votes = Counter(k_nearest_labels)
-    max_votes = votes[predicted_activity]
-    confidence = max_votes / knn_model.k
+    accuracy = eval_results['test_accuracy']
+    y_pred = eval_results['y_pred'][0]
     
-    return int(predicted_activity), confidence
+    if verbose:
+        print(f"[Predição] A{y_pred} (Real: A{activity_label})")
+    
+    return {
+        'activity_predicted': int(y_pred),
+        'activity_real': int(activity_label),
+        'accuracy': float(accuracy),
+        'raw_shape': raw_data.shape,
+        'is_correct': accuracy == 1.0,
+    }
 
+
+def evaluate_multiple_csvs(
+    num_csvs=3,
+    part_folder=None,
+    data_type='features',
+    split_type='within',
+    scenario='all',
+    k=10,
+    random_participant=False,
+    random_device=False,
+    participants=None,
+    devices=None,
+):
+    """
+    Testa o modelo em múltiplos CSVs com seleção flexível.
+    
+    Parâmetros:
+    -----------
+    num_csvs : int
+        Número de CSVs a testar.
+    part_folder : str ou None
+        Pasta específica (ex: 'part7'). Se None e random_participant=False, usa 'part7'.
+    data_type : str
+        Tipo de dados ('features' ou 'embeddings')
+    split_type : str
+        Tipo de split ('within' ou 'between')
+    scenario : str
+        Cenário ('all', 'pca', 'relief')
+    k : int
+        Número de vizinhos
+    random_participant : bool
+        Se True, escolhe participante aleatório
+    random_device : bool
+        Se True, escolhe device aleatório
+    participants : list ou None
+        IDs de participantes disponíveis
+    devices : list ou None
+        IDs de devices disponíveis
+    
+    Returns:
+    --------
+    list de dicts com resultados de cada teste
+    """
+    results = []
+    
+    try:
+        selected_csvs = select_random_csvs(
+            num_csvs=num_csvs,
+            part_folder=part_folder,
+            participants=participants,
+            devices=devices,
+            random_participant=random_participant,
+            random_device=random_device,
+        )
+        
+        for csv_idx, csv_path in enumerate(selected_csvs, 1):
+            print(f"\n[Test {csv_idx}/{len(selected_csvs)}] CSV: {csv_path.name}")
+            print("=" * 60)
+            
+            try:
+                csv_data = process_csv_file(csv_path, scenario=scenario)
+                X_test_scaled = csv_data['X_test_scaled']
+                y_test_csv = csv_data['y_test']
+                
+                print(f"  Raw shape: {csv_data['raw_shape']}")
+                print(f"  Linhas selecionadas: [{csv_data['window_start']}:{csv_data['window_end']}]")
+                print(f"  Atividade confirmada: A{csv_data['activity']}")
+                print(f"  Janelas válidas encontradas: {csv_data['valid_windows_count']}")
+                print(f"  Features shape: {csv_data['features_shape']}")
+                print(f"  Scaled shape: {X_test_scaled.shape}\n")
+                
+                eval_results = evaluate_model(
+                    data_type=data_type,
+                    split_type=split_type,
+                    scenario=scenario,
+                    k=k,
+                    X_test_custom=X_test_scaled,
+                    y_test_custom=y_test_csv,
+                )
+                
+                results.append({
+                    'csv_name': csv_path.name,
+                    'window_range': f"[{csv_data['window_start']}:{csv_data['window_end']}]",
+                    'activity': csv_data['activity'],
+                    'accuracy': eval_results['test_accuracy'],
+                    'y_test': eval_results['y_test'],
+                    'y_pred': eval_results['y_pred'],
+                })
+                
+            except Exception as e:
+                print(f"  [ERRO] Falha ao processar {csv_path.name}: {e}")
+        
+        print("\n" + "=" * 60)
+        print("RESUMO DOS TESTES")
+        print("=" * 60)
+        for result in results:
+            print(f"{result['csv_name']} A{result['activity']} {result['window_range']}: {result['accuracy']:.4f}")
+        
+        if results:
+            avg_accuracy = np.mean([r['accuracy'] for r in results])
+            print(f"\nAcurácia média: {avg_accuracy:.4f}")
+        
+        return results
+    
+    except Exception as e:
+        print(f"[ERRO] Falha ao avaliar múltiplos CSVs: {e}")
+        return []

@@ -10,7 +10,7 @@ import time
 
 
 # Mude para True para usar GPU (requer CuPy instalado)
-USE_GPU = True
+USE_GPU = False
 
 # Tentar importar CuPy se GPU estiver ativada
 if USE_GPU:
@@ -112,7 +112,10 @@ class KNNClassifier:
         start_time = time.time()
         
         for idx, x in enumerate(X_test):
-            progress_with_time(idx, len(X_test), start_time, label="Predicting")
+            # Suprimir progress bar para evitar erros de encoding
+            if len(X_test) > 100 and idx % max(1, len(X_test) // 10) == 0:
+                elapsed = time.time() - start_time
+                print(f"  Predicting: {idx}/{len(X_test)} ({elapsed:.1f}s)", flush=True)
             
             # Calcular distâncias (GPU ou CPU)
             if usar_gpu:
@@ -131,9 +134,6 @@ class KNNClassifier:
             # Voto por maioria
             pred = Counter(k_labels).most_common(1)[0][0]
             predictions.append(pred)
-        
-        # Mostrar a última iteração
-        progress_with_time(len(X_test), len(X_test), start_time, label="Predicting")
         
         return np.array(predictions)
     

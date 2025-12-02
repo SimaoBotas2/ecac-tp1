@@ -366,21 +366,54 @@ results.compare_k_values()
 # ======================================================================
 # TODO 6 — DEPLOYMENT FUNCTION
 # ======================================================================
-from meta2.predict_new import (
-    train_and_save_best_model,
-    load_model,
-    predict_activity,
-)
 
-models_dir = ROOT / 'models' / 'trained_models'
+from meta2.predict_new import evaluate_multiple_csvs, predict_from_array
 
-#alterar estes parâmetros conforme o melhor modelo
-info = train_and_save_best_model(data_type='features', split_type='within', scenario='all', k=10, save_dir=models_dir)
-model_data = load_model(info['model_path'])
-raw = np.random.randn(256, 9)
-activity, confidence = predict_activity(raw, model_data)
+# Task 6: Testar modelo com múltiplos CSVs
+print_section("6 - Deployment com Dados CSV")
 
-print(f"\nPredicted Activity: A{activity} with confidence {confidence:.4f}")
+try:
+    # Opção 1: Usar um array (256, 9) 
+    #raw_array = np.random.randn(256, 9).astype(np.float32)  # Shape: (256 linhas, 9 colunas)
+    # Colunas: [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z]
+    #result = predict_from_array(
+    #    raw_data=raw_array,
+    #    activity_label=4,  # label real da atividade (1-7)
+    #    data_type='features',
+    #    split_type='within',
+    #    scenario='all',
+    #    k=10,
+    #    verbose=True,
+    #)
+    #print(f"Predição: A{result['activity_predicted']} (Real: A{result['activity_real']})")
+    #print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")
+    
+    # Opção 2: Testar com participante fixo (part7)
+    # results = evaluate_multiple_csvs(
+    #     num_csvs=10,
+    #     part_folder='part7',
+    #     data_type='features',
+    #     split_type='within',
+    #     scenario='all',
+    #     k=10,
+    # )
+    
+    #Opção 3: Testar com participante ALEATÓRIO e devices ALEATÓRIOS
+    results = evaluate_multiple_csvs(
+         num_csvs=15,
+         random_participant=True,  # Escolhe participante aleatório (0-14)
+         random_device=True,        # Escolhe devices aleatórios (1-5)
+         data_type='features',
+         split_type='within',
+         scenario='all',
+         k=10,
+     )
+    
+except Exception as e:
+    print(f"[Task 6] Erro ao processar CSVs: {e}")
+    import traceback
+    traceback.print_exc()
+
 
 # ======================================================================
 # TODO 7 — GO FURTHER (BONUS)
