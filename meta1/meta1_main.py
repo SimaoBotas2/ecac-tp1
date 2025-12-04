@@ -14,10 +14,21 @@ sys.path.append(str(ROOT))
 DATA_PROCESSED = ROOT / "data" / "processed"
 
 # IMPORTS AJUSTADOS À ESTRUTURA NOVA
-from meta1.preprocessing import data_treatment, statistic_significance
-from meta1.outliers import boxplot, dbscan, k_means, zscore as z
-from meta1.features import feature_extractor as fe, feature_selection as fs
-from utils.config import DEBUG
+try:
+    from meta1.preprocessing import data_treatment, statistic_significance
+    from meta1.outliers import boxplot, k_means, zscore as z
+    from meta1.features import feature_extractor as fe, feature_selection as fs
+    from utils.config import DEBUG
+except ImportError:
+    # Fallback - tentar importar diretamente
+    try:
+        from meta1.preprocessing import data_treatment, statistic_significance
+        from meta1.outliers import boxplot, k_means, zscore as z
+        from meta1.features import feature_extractor as fe, feature_selection as fs
+        from utils.config import DEBUG
+    except ImportError:
+        DEBUG = False
+        pass
 
 # Todos os participantes para 3.1 (como exige o enunciado)
 all_participants = list(range(15))
@@ -181,7 +192,7 @@ try:
         accel[:window_size], gyro[:window_size], mag[:window_size], sr
     )
     feature_names = list(feat_dict.keys())
-except Exception:
+except (KeyError, ValueError, AttributeError):
     feature_names = [f"f{i}" for i in range(X_features.shape[1])]
 
 fs.print_selection("Fisher Score", np.array(top10_fisher), fisher_scores, feature_names)

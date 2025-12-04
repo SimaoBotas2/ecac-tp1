@@ -1,4 +1,4 @@
-# TASK 6: DEPLOYMENT - Predição com kNN Model
+#DEPLOYMENT - Predição com kNN Model
 
 import sys
 from pathlib import Path
@@ -133,7 +133,7 @@ def predict_from_array(
     raw_data : np.ndarray
         Array de shape (256, 9) com [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z]
     activity_label : int
-        Etiqueta real da atividade (apenas para info/validação)
+        Etiqueta real da atividade (1-7)
     data_type : str
         Tipo de dados ('features' ou 'embeddings')
     split_type : str
@@ -152,10 +152,7 @@ def predict_from_array(
         - activity_real: atividade real
         - accuracy: se acertou (1.0 ou 0.0)
         - raw_shape: shape do input
-    
-    Raises:
-    -------
-    ValueError se shape não for (256, 9)
+        - is_correct: bool se a predição foi correta
     """
     raw_data = np.asarray(raw_data, dtype=np.float32)
     
@@ -166,7 +163,7 @@ def predict_from_array(
         print(f"\n[Predict] Array recebido com shape {raw_data.shape}")
         print(f"  Atividade real: A{activity_label}\n")
     
-    # Extrair sensores (primeiras 250 linhas para feature extraction)
+    # Primeiras 250 linhas para feature extraction
     feature_window = raw_data[:250, :]
     
     accel_data = feature_window[:, 0:3]
@@ -238,7 +235,7 @@ def evaluate_multiple_csvs(
     devices=None,
 ):
     """
-    Testa o modelo em múltiplos CSVs com seleção flexível.
+    Testa o modelo em múltiplos CSV, apenas para testar que a função de predicting funciona corretamente.
     
     Parâmetros:
     -----------

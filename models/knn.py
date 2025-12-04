@@ -6,7 +6,6 @@ import numpy as np
 from collections import Counter
 import sys
 from pathlib import Path
-import time
 
 
 # Mude para True para usar GPU (requer CuPy instalado)
@@ -26,7 +25,11 @@ else:
     GPU_AVAILABLE = False
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from utils.progress import progress_with_time
+
+try:
+    from utils.progress import progress_with_time
+except ImportError:
+    pass  # progress_with_time não é usado nesta versão
 
 
 class KNNClassifier:
@@ -45,6 +48,8 @@ class KNNClassifier:
         self.distance_metric = distance_metric
         self.X_train = None
         self.y_train = None
+        self.X_train_gpu = None
+        self.is_fitted = False
         self.is_fitted = False
     
     def fit(self, X_train, y_train):
@@ -54,11 +59,10 @@ class KNNClassifier:
         self.y_train = np.array(y_train)
         
         # Se GPU está ativa e disponível, copiar para GPU
-        self.X_train_gpu = None
         if GPU_AVAILABLE:
             try:
                 self.X_train_gpu = cp.asarray(self.X_train)
-            except Exception as e:
+            except (RuntimeError, MemoryError) as e:
                 print(f"Aviso: Não foi possível copiar dados para GPU: {e}")
                 self.X_train_gpu = None
         
@@ -109,13 +113,8 @@ class KNNClassifier:
         usar_gpu = GPU_AVAILABLE and self.X_train_gpu is not None
         
         predictions = []
-        start_time = time.time()
         
-        for idx, x in enumerate(X_test):
-            # Suprimir progress bar para evitar erros de encoding
-            if len(X_test) > 100 and idx % max(1, len(X_test) // 10) == 0:
-                elapsed = time.time() - start_time
-                print(f"  Predicting: {idx}/{len(X_test)} ({elapsed:.1f}s)", flush=True)
+        for x in X_test:
             
             # Calcular distâncias (GPU ou CPU)
             if usar_gpu:

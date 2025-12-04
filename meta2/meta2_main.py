@@ -10,17 +10,33 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 import numpy as np
-from meta1.preprocessing import data_treatment
-from meta1.features import feature_extractor as fe
-from meta2.smote import meta2_balance
-from meta2.embeddings.embeddings_extractor import (
-    extract_embeddings_dataset,
-    save_embeddings_to_csv,
-)
-from meta2.splits import data_splitter
-from meta2.splits import scenario_builder
-from models.knn import KNNClassifier, print_metrics
-from utils.progress import print_section
+
+try:
+    from meta1.preprocessing import data_treatment
+    from meta1.features import feature_extractor as fe
+    from meta2.smote import meta2_balance
+    from meta2.embeddings.embeddings_extractor import (
+        extract_embeddings_dataset,
+        save_embeddings_to_csv,
+    )
+    from meta2.splits import data_splitter, scenario_builder
+    from models.knn import KNNClassifier, print_metrics
+    from utils.progress import print_section
+except ImportError as e:
+    # Fallback imports - usar módulos locais
+    try:
+        from meta1.preprocessing import data_treatment
+        from meta1.features import feature_extractor as fe
+        from meta2.smote import meta2_balance
+        from meta2.embeddings.embeddings_extractor import (
+            extract_embeddings_dataset,
+            save_embeddings_to_csv,
+        )
+        from meta2.splits import data_splitter, scenario_builder
+        from models.knn import KNNClassifier, print_metrics
+        from utils.progress import print_section
+    except ImportError:
+        pass  # Se não conseguir importar, as funções que precisam podem falhar gracefully
 
 
 # ======================================================================
@@ -37,12 +53,12 @@ FEATURES_PART_FILE = DATA_PROCESSED / "features_participant.csv"
 # Flag para voltar a extrair features específicas (default False)
 FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 
-print_section("META 2 - Preparar Dados")
+#print_section("META 2 - Preparar Dados")
 
 # ======================================================================
 # TODO 0 — DEFINIR PARÂMETROS BASE
 # ======================================================================
-
+"""
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
 all_participants = list(range(15))
@@ -62,7 +78,7 @@ dados = dados[mask_1_to_7]
 activities = activities[mask_1_to_7]
 
 print(f"Após filtrar atividades 1-7: {dados.shape}")
-
+"""
 # ======================================================================
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
@@ -183,7 +199,7 @@ except Exception as e:
 """
 
 # ======================================================================
-# TODO 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
+# 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
 # ======================================================================
 """
 Task 3.1 - TVT 60-20-20 within subject
@@ -217,156 +233,94 @@ except Exception as e:
 """
 
 # ======================================================================
-# 4 — MODEL LEARNING (kNN)
+# 4 — EXEMPLO: TREINAR UM ÚNICO MODELO kNN
 # ======================================================================
 """
-Task 4.1 - Implement manual kNN
-Task 4.2 - Implement metrics:
-      - confusion matrix
-      - accuracy
-      - precision
-      - recall
-      - F1
+Exemplo de treino de um modelo kNN individual.
+Altere os parâmetros abaixo para testar diferentes cenários.
+"""
 
+DATA_TYPE = "features"      # "features" ou "embeddings"
+SPLIT_TYPE = "within"       # "within" ou "between"
+SCENARIO = "all"            # "all", "pca" ou "relief"
+K_VALUE = 10                # Número de vizinhos
 
-print("\n=== 4.1 / 4.2 - kNN Training & Evaluation ===\n")
+DEBUG_SINGLE_MODEL = False  # Muda para True para executar este exemplo
 
-# Cenários a testar
-data_type = "embeddings"  # "features" ou "embeddings"
-scenario_split = "within"  # "between" ou "within"
+if DEBUG_SINGLE_MODEL:
+    print_section(f"4 - DEBUG: Modelo kNN | {DATA_TYPE} | {SPLIT_TYPE} | {SCENARIO} | k={K_VALUE}")
+    
+    try:
+        from models.knn import confusion_matrix
+    except ImportError:
+        try:
+            from knn import confusion_matrix
+        except ImportError:
+            pass  # confusion_matrix será importado quando necessário
+    
+    scenario_file = DATA_PROCESSED / "scenarios" / DATA_TYPE / SPLIT_TYPE / f"{SCENARIO}.npz"
+    
+    if scenario_file.exists():
+        data = np.load(scenario_file)
+        X_train = data['train_X']
+        y_train = data['train_y']
+        X_val = data['val_X']
+        y_val = data['val_y']
+        X_test = data['test_X']
+        y_test = data['test_y']
+        
+        # Treinar
+        knn = KNNClassifier(k=K_VALUE)
+        knn.fit(X_train, y_train)
+        
+        # Avaliar
+        y_pred_test = knn.predict(X_test)
+        test_acc = (y_pred_test == y_test).mean()
+        
+        cm_test, classes = confusion_matrix(y_test, y_pred_test)
+        
+        print(f"Test Accuracy: {test_acc:.4f}\n")
+        print("Confusion Matrix:")
+        print("     " + "  ".join(f"A{c}" for c in classes))
+        for i, true_class in enumerate(classes):
+            row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
+            print(f"A{true_class}  {row_str}")
+    else:
+        print(f"[ERRO] Ficheiro não encontrado: {scenario_file}")
 
-print(f" Análise com: {data_type.upper()} | {scenario_split.upper()}\n")
-
-scenarios_dir = DATA_PROCESSED / "scenarios" / data_type / scenario_split
-scenarios = ["all", "pca", "relief"]
-
-from models.knn import confusion_matrix
-
-results_dir = DATA_PROCESSED / "results"
-results_dir.mkdir(parents=True, exist_ok=True)
+# ======================================================================
+# 5 — EVALUATION PIPELINE
+# ======================================================================
+# Treina todos os modelos em train + validation
+# Seleciona melhor k por validation accuracy
+# Avalia no test set (para within e between)
 
 try:
-    for scenario in scenarios:
-        print(f"\n--- Cenário: {scenario.upper()} ({data_type} / {scenario_split}) ---\n")
-        
-        try:
-            # Carregar dados do cenário (NPZ)
-            scenario_file = scenarios_dir / f"{scenario}.npz"
-            
-            if not scenario_file.exists():
-                print(f"Ficheiro não encontrado: {scenario_file}")
-                continue
-            
-            # Carregar dados
-            data = np.load(scenario_file)
-            X_train = data['train_X']
-            y_train = data['train_y']
-            X_val = data['val_X']
-            y_val = data['val_y']
-            X_test = data['test_X']
-            y_test = data['test_y']
-            
-            print(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}")
-            print(f"Features por amostra: {X_train.shape[1]}\n")
-            
-            # Treinar kNN
-            k_value = 10
-            knn = KNNClassifier(k=k_value)
-            knn.fit(X_train, y_train)
-            
-            # Predições
-            y_pred_train = knn.predict(X_train)
-            train_acc = (y_pred_train == y_train).mean()
-            
-            y_pred_val = knn.predict(X_val)
-            val_acc = (y_pred_val == y_val).mean()
-            
-            y_pred_test = knn.predict(X_test)
-            test_acc = (y_pred_test == y_test).mean()
-            
-            # Confusion matrix
-            cm_test, classes = confusion_matrix(y_test, y_pred_test)
-            
-            # Guardar num ficheiro separado com nome descritivo (incluindo k)
-            results_file = results_dir / f"knn_results_{data_type}_{scenario_split}_{scenario}_k{k_value}.txt"
-            
-            with open(results_file, 'w') as f:
-                f.write("=" * 70 + "\n")
-                f.write(f"META 2 - kNN Classification Results\n")
-                f.write(f"k={k_value} | Data Type: {data_type.upper()} | Split: {scenario_split.upper()} | Scenario: {scenario.upper()}\n")
-                f.write("=" * 70 + "\n\n")
-                
-                f.write(f"Train: {X_train.shape[0]}, Val: {X_val.shape[0]}, Test: {X_test.shape[0]}\n")
-                f.write(f"Features por amostra: {X_train.shape[1]}\n\n")
-                
-                f.write(f"Train Accuracy: {train_acc:.4f}\n")
-                f.write(f"Val Accuracy: {val_acc:.4f}\n")
-                f.write(f"Test Accuracy: {test_acc:.4f}\n\n")
-                
-                # Confusion Matrix
-                f.write("Confusion Matrix (rows=true, cols=predicted):\n")
-                f.write("     " + "  ".join(f"A{c}" for c in classes) + "\n")
-                for i, true_class in enumerate(classes):
-                    row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
-                    f.write(f"A{true_class}  {row_str}\n")
-                
-                # Per-class metrics
-                f.write("\nPer-class metrics:\n")
-                f.write(f"{'Class':<8} {'Precision':<12} {'Recall':<12} {'F1-Score':<12} {'Support':<10}\n")
-                f.write("-" * 52 + "\n")
-                
-                for i, activity_class in enumerate(classes):
-                    # Calcular componentes da matriz de confusão
-                    true_positives = cm_test[i, i]
-                    false_positives = cm_test[:, i].sum() - true_positives
-                    false_negatives = cm_test[i, :].sum() - true_positives
-                    num_samples = cm_test[i, :].sum()
-                    
-                    # Calcular métricas por classe
-                    precision = true_positives / (true_positives + false_positives) if (true_positives + false_positives) > 0 else 0
-                    recall = true_positives / (true_positives + false_negatives) if (true_positives + false_negatives) > 0 else 0
-                    f1_score = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
-                    
-                    # Guardar linha no ficheiro
-                    f.write(f"A{activity_class:<7} {precision:<12.4f} {recall:<12.4f} {f1_score:<12.4f} {int(num_samples):<10}\n")
+    from models.evaluation import run_evaluation
+except ImportError:
+    try:
+        # Se estiver a executar de meta2/, importar do diretório pai
+        import sys
+        sys.path.insert(0, str(ROOT / "models"))
+        from evaluation import run_evaluation
+    except ImportError:
+        run_evaluation = None
 
-            
-            # Imprimir no terminal
-            print(f"Train Accuracy: {train_acc:.4f}")
-            print(f"Val Accuracy: {val_acc:.4f}")
-            print(f"Test Accuracy: {test_acc:.4f}\n")
-            
-            print("Confusion Matrix:")
-            print("     " + "  ".join(f"A{c}" for c in classes))
-            for i, true_class in enumerate(classes):
-                row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
-                print(f"A{true_class}  {row_str}")
-            
-            print(f"Guardado em: {results_file.name} ({data_type}/{scenario_split}/{scenario})\n")
-            
-        except Exception as e:
-            print(f"Erro no cenário {scenario}: {e}")
-            import traceback
-            traceback.print_exc()
-
-except Exception as e:
-    print(f"[META2][4.1/4.2] Erro: {e}")
+try:
+    if run_evaluation:
+        evaluation_results = run_evaluation(DATA_PROCESSED)
+    else:
+        print("[META2][5] Aviso: run_evaluation não pôde ser importado")
+    
+except (OSError, ValueError, RuntimeError, ImportError) as e:
+    print(f"[META2][5] Erro na avaliação: {e}")
     import traceback
     traceback.print_exc()
-
-"""
-# ======================================================================
-# TODO 5 — EVALUATION PIPELINE
-# ======================================================================
-"""from models import compare_results as results
-
-results.compare_k_values()
-"""
 
 # ======================================================================
 # TODO 6 — DEPLOYMENT FUNCTION
 # ======================================================================
-
+"""
 from meta2.predict_new import evaluate_multiple_csvs, predict_from_array
 
 # Task 6: Testar modelo com múltiplos CSVs
@@ -402,7 +356,7 @@ try:
     results = evaluate_multiple_csvs(
          num_csvs=15,
          random_participant=True,  # Escolhe participante aleatório (0-14)
-         random_device=True,        # Escolhe devices aleatórios (1-5)
+         random_device=True,       # Escolhe devices aleatórios (1-5)
          data_type='features',
          split_type='within',
          scenario='all',
@@ -413,17 +367,15 @@ except Exception as e:
     print(f"[Task 6] Erro ao processar CSVs: {e}")
     import traceback
     traceback.print_exc()
-
+"""
 
 # ======================================================================
 # TODO 7 — GO FURTHER (BONUS)
 # ======================================================================
-"""
-Task 7:
-Extra improvements:
-    - Deep neural models
-    - LSTM/Transformer
-    - Augmentation improvements
-    - Ensembling models
-"""
+# Task 7:
+# Extra improvements:
+#     - Deep neural models
+#     - LSTM/Transformer
+#     - Augmentation improvements
+#     - Ensembling models
 
