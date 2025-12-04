@@ -70,7 +70,7 @@ class SimpleEvaluation:
         y_val = scenario_data['y_val']
         
         print(f"    Carregado: X_train={X_train.shape}, X_val={X_val.shape}")
-        print(f"    Testando k={self.k_values}...", end="")
+        print(f"    Testando k={self.k_values}...")
         
         # Teste vários k em train e valida em val
         best_k = None
@@ -79,10 +79,18 @@ class SimpleEvaluation:
         
         start_time = time.time()
         for idx, k in enumerate(self.k_values):
+            print(f"\n      [k={k}] Treinando...", flush=True)
+            iter_start = time.time()
+            
             knn = KNNClassifier(k=k)
             knn.fit(X_train, y_train)
+            fit_time = time.time() - iter_start
+            print(f"      [k={k}] Fit OK ({fit_time:.2f}s) - Validando...")
+            
             val_acc = knn.score(X_val, y_val)
+            val_time = time.time() - iter_start - fit_time
             k_accuracies[k] = val_acc
+            print(f"      [k={k}] Val Acc={val_acc:.4f} ({val_time:.2f}s)", flush=True)
             
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
@@ -233,9 +241,6 @@ class SimpleEvaluation:
     
     def run_all(self):
         """Run evaluation pipeline in 3 phases."""
-        print_section("5 - EVALUATION: Treinar em train, validar em val, testar em test")
-        print()
-        
         # FASE 1: Testar vários k em train, validar em val
         print_section("5.0 - Fase 1: Seleção do Melhor k")
         print()
@@ -263,6 +268,45 @@ class SimpleEvaluation:
         self.retrain_and_test()
         
         return self.results
+
+    def run_best_only(self, data_type: str, split_type: str, scenario: str):
+        """Avalia apenas um cenário indicado, escolhe o melhor k por validação,
+        retreina com train+val e testa no conjunto de teste.
+
+        Retorna os resultados desse cenário em self.results.
+        """
+        # Fase 1: escolher melhor k apenas para este cenário
+        try:
+            best_k, best_val_acc, k_accuracies = self.evaluate_scenario(data_type, split_type, scenario)
+        except (OSError, ValueError, RuntimeError) as e:
+            raise RuntimeError(f"Falha ao avaliar cenário {data_type}_{split_type}_{scenario}: {e}")
+
+        # Guardar entrada best_ks (para consistência com retrain)
+        key = f"{data_type}_{split_type}_{scenario}"
+        self.best_ks[key] = {
+            'best_k': best_k,
+            'val_acc': best_val_acc,
+            'k_accuracies': k_accuracies,
+        }
+
+        # Fase 3: retrain + test apenas para este cenário
+        self._retrain_and_test_single(data_type, split_type, scenario, best_k)
+        return self.results
+
+    def run_with_params(self, data_type: str, split_type: str, scenario: str, k: int):
+        """Retreina e testa apenas um cenário com parâmetros fornecidos pelo utilizador,
+        SEM validação prévia. Usa k indicado para treinar em train+val e avaliar em test.
+        """
+        # Preparar entrada best_ks mínima para consistência do formato de saída
+        key = f"{data_type}_{split_type}_{scenario}"
+        self.best_ks[key] = {
+            'best_k': int(k),
+            'val_acc': None,
+            'k_accuracies': {},
+        }
+        # Executar retrain + test diretamente
+        self._retrain_and_test_single(data_type, split_type, scenario, int(k))
+        return self.results
     
     def print_summary(self):
         """Print summary of final results."""
@@ -276,9 +320,10 @@ class SimpleEvaluation:
         for key, result in sorted(self.results.items()):
             parts = key.split('_')
             data_type, split_type, scenario = parts[0], parts[1], parts[2]
-            
+            val_acc = result.get('val_acc_at_best_k')
+            val_acc_str = f"{val_acc:.4f}" if isinstance(val_acc, (int, float)) else "-"
             print(f"{data_type:<15} {split_type:<10} {scenario:<10} {result['best_k']:<8} "
-                  f"{result['val_acc_at_best_k']:<10.4f} {result['test_acc']:<10.4f}")
+                  f"{val_acc_str:<10} {result['test_acc']:<10.4f}")
         
         print()
     
@@ -339,8 +384,36 @@ def run_evaluation(data_processed_path):
     evaluator.save_results()
     return evaluator.results
 
+def run_best_model(data_processed_path, data_type, split_type, scenario):
+    """Run pipeline apenas para um cenário específico indicado pelo utilizador."""
+    evaluator = SimpleEvaluation(data_processed_path)
+    evaluator.run_best_only(data_type, split_type, scenario)
+    evaluator.print_summary()
+    evaluator.print_confusion_matrices()
+    evaluator.save_results()
+    return evaluator.results
+
+def run_with_params_cli(data_processed_path, data_type, split_type, scenario, k):
+    """CLI helper: retreina + testa um cenário específico com k fornecido."""
+    evaluator = SimpleEvaluation(data_processed_path)
+    evaluator.run_with_params(data_type, split_type, scenario, int(k))
+    evaluator.print_summary()
+    evaluator.print_confusion_matrices()
+    evaluator.save_results()
+    return evaluator.results
+
 
 if __name__ == "__main__":
-    # Example usage
+    # CLI:
+    #  - Sem args: corre pipeline completo
+    #  - 3 args: data_type split_type scenario -> escolhe melhor k por validação e retreina
+    #  - 4 args: data_type split_type scenario k -> retreina diretamente com k indicado, SEM validação
     DATA_PROCESSED = Path(__file__).resolve().parents[1] / "data" / "processed"
-    run_evaluation(DATA_PROCESSED)
+    if len(sys.argv) == 5:
+        dt, sp, sc, k = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
+        run_with_params_cli(DATA_PROCESSED, dt, sp, sc, k)
+    elif len(sys.argv) == 4:
+        dt, sp, sc = sys.argv[1], sys.argv[2], sys.argv[3]
+        run_best_model(DATA_PROCESSED, dt, sp, sc)
+    else:
+        run_evaluation(DATA_PROCESSED)

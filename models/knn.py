@@ -6,10 +6,11 @@ import numpy as np
 from collections import Counter
 import sys
 from pathlib import Path
+import time
 
 
 # Mude para True para usar GPU (requer CuPy instalado)
-USE_GPU = False
+USE_GPU = True
 
 # Tentar importar CuPy se GPU estiver ativada
 if USE_GPU:
@@ -29,7 +30,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 try:
     from utils.progress import progress_with_time
 except ImportError:
-    pass  # progress_with_time não é usado nesta versão
+    # Fallback: definir função simples se não conseguir importar
+    def progress_with_time(current, total, start_time, label="Progress", width=30):
+        """Simple progress function if utils.progress is not available."""
+        pass
 
 
 class KNNClassifier:
@@ -50,7 +54,7 @@ class KNNClassifier:
         self.y_train = None
         self.X_train_gpu = None
         self.is_fitted = False
-        self.is_fitted = False
+        self.gpu_fallback_warned = False  # Aviso de GPU fallback
     
     def fit(self, X_train, y_train):
         """Armazena dados de treino (em CPU e GPU se disponível)."""
@@ -113,15 +117,23 @@ class KNNClassifier:
         usar_gpu = GPU_AVAILABLE and self.X_train_gpu is not None
         
         predictions = []
+        predict_start = time.time()
         
-        for x in X_test:
+        for idx, x in enumerate(X_test):
             
             # Calcular distâncias (GPU ou CPU)
             if usar_gpu:
-                # Usar GPU
-                x_gpu = cp.asarray(x)
-                distances_gpu = self._compute_distances_vectorized(x_gpu, self.X_train_gpu, cp)
-                distances = cp.asnumpy(distances_gpu)
+                try:
+                    # Usar GPU
+                    x_gpu = cp.asarray(x)
+                    distances_gpu = self._compute_distances_vectorized(x_gpu, self.X_train_gpu, cp)
+                    distances = cp.asnumpy(distances_gpu)
+                except (RuntimeError, OSError, FileNotFoundError) as e:
+                    # Se GPU falhar, cair para CPU com aviso
+                    if not self.gpu_fallback_warned:
+                        print(f"\n[GPU FALLBACK] GPU falhou ({type(e).__name__}). Usando CPU.")
+                        self.gpu_fallback_warned = True
+                    distances = self._compute_distances_vectorized(x, self.X_train, np)
             else:
                 # Usar CPU
                 distances = self._compute_distances_vectorized(x, self.X_train, np)
@@ -133,6 +145,9 @@ class KNNClassifier:
             # Voto por maioria
             pred = Counter(k_labels).most_common(1)[0][0]
             predictions.append(pred)
+            
+            # Mostrar progresso a cada amostra
+            progress_with_time(idx + 1, len(X_test), predict_start, label="Predicting")
         
         return np.array(predictions)
     

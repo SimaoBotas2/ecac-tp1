@@ -8,35 +8,20 @@ import sys
 from pathlib import Path
 # GARANTE QUE O ROOT DO PROJETO ESTÁ NO PYTHONPATH
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.append(str(ROOT))
+sys.path.insert(0, str(ROOT))
 import numpy as np
 
-try:
-    from meta1.preprocessing import data_treatment
-    from meta1.features import feature_extractor as fe
-    from meta2.smote import meta2_balance
-    from meta2.embeddings.embeddings_extractor import (
-        extract_embeddings_dataset,
-        save_embeddings_to_csv,
-    )
-    from meta2.splits import data_splitter, scenario_builder
-    from models.knn import KNNClassifier, print_metrics
-    from utils.progress import print_section
-except ImportError as e:
-    # Fallback imports - usar módulos locais
-    try:
-        from meta1.preprocessing import data_treatment
-        from meta1.features import feature_extractor as fe
-        from meta2.smote import meta2_balance
-        from meta2.embeddings.embeddings_extractor import (
-            extract_embeddings_dataset,
-            save_embeddings_to_csv,
-        )
-        from meta2.splits import data_splitter, scenario_builder
-        from models.knn import KNNClassifier, print_metrics
-        from utils.progress import print_section
-    except ImportError:
-        pass  # Se não conseguir importar, as funções que precisam podem falhar gracefully
+# Imports estáveis (sem try/except). Assumimos execução a partir do workspace raiz.
+from meta1.preprocessing import data_treatment
+from meta1.features import feature_extractor as fe
+from meta2.smote import meta2_balance
+from meta2.embeddings.embeddings_extractor import (
+    extract_embeddings_dataset,
+    save_embeddings_to_csv,
+)
+from meta2.splits import data_splitter, scenario_builder
+from models.knn import KNNClassifier, print_metrics
+from utils.progress import print_section
 
 
 # ======================================================================
@@ -56,7 +41,7 @@ FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 #print_section("META 2 - Preparar Dados")
 
 # ======================================================================
-# TODO 0 — DEFINIR PARÂMETROS BASE
+# 0 — DEFINIR PARÂMETROS BASE
 # ======================================================================
 """
 participant_selected = 3
@@ -160,7 +145,7 @@ except Exception as e:
 """
 
 # ======================================================================
-# TODO 2 — EXTRAÇÃO DE EMBEDDINGS
+# 2 — EXTRAÇÃO DE EMBEDDINGS
 # ======================================================================
 """
 print_section("2.1 - Extrair Embeddings")
@@ -243,20 +228,14 @@ Altere os parâmetros abaixo para testar diferentes cenários.
 DATA_TYPE = "features"      # "features" ou "embeddings"
 SPLIT_TYPE = "within"       # "within" ou "between"
 SCENARIO = "all"            # "all", "pca" ou "relief"
-K_VALUE = 10                # Número de vizinhos
+K_VALUE = 3                # Número de vizinhos
 
 DEBUG_SINGLE_MODEL = False  # Muda para True para executar este exemplo
 
 if DEBUG_SINGLE_MODEL:
     print_section(f"4 - DEBUG: Modelo kNN | {DATA_TYPE} | {SPLIT_TYPE} | {SCENARIO} | k={K_VALUE}")
     
-    try:
-        from models.knn import confusion_matrix
-    except ImportError:
-        try:
-            from knn import confusion_matrix
-        except ImportError:
-            pass  # confusion_matrix será importado quando necessário
+    from models.knn import confusion_matrix
     
     scenario_file = DATA_PROCESSED / "scenarios" / DATA_TYPE / SPLIT_TYPE / f"{SCENARIO}.npz"
     
@@ -294,20 +273,19 @@ if DEBUG_SINGLE_MODEL:
 # Treina todos os modelos em train + validation
 # Seleciona melhor k por validation accuracy
 # Avalia no test set (para within e between)
+"""
+from models.evaluation import run_evaluation, run_with_params_cli
 
 try:
-    from models.evaluation import run_evaluation
-except ImportError:
-    try:
-        # Se estiver a executar de meta2/, importar do diretório pai
-        import sys
-        sys.path.insert(0, str(ROOT / "models"))
-        from evaluation import run_evaluation
-    except ImportError:
-        run_evaluation = None
+    # Escolha: usar toda a pipeline (validação + retrain) OU apenas test com parâmetros dados
+    USE_SINGLE_RETRAIN = True  # mudar para True para chamar apenas um cenário com k indicado
 
-try:
-    if run_evaluation:
+    if USE_SINGLE_RETRAIN:
+        print("5 - Teste único (sem validação)")
+        # Usa os parâmetros definidos acima na Secção 4
+        evaluation_results = run_with_params_cli(DATA_PROCESSED, DATA_TYPE, SPLIT_TYPE, SCENARIO, K_VALUE)
+    elif run_evaluation:
+        print("5 - Evaluation pipeline completa")
         evaluation_results = run_evaluation(DATA_PROCESSED)
     else:
         print("[META2][5] Aviso: run_evaluation não pôde ser importado")
@@ -316,32 +294,31 @@ except (OSError, ValueError, RuntimeError, ImportError) as e:
     print(f"[META2][5] Erro na avaliação: {e}")
     import traceback
     traceback.print_exc()
-
-# ======================================================================
-# TODO 6 — DEPLOYMENT FUNCTION
-# ======================================================================
 """
+# ======================================================================
+# 6 — DEPLOYMENT FUNCTION
+# ======================================================================
+
 from meta2.predict_new import evaluate_multiple_csvs, predict_from_array
 
 # Task 6: Testar modelo com múltiplos CSVs
 print_section("6 - Deployment com Dados CSV")
 
 try:
-    # Opção 1: Usar um array (256, 9) 
-    #raw_array = np.random.randn(256, 9).astype(np.float32)  # Shape: (256 linhas, 9 colunas)
-    # Colunas: [acc_x, acc_y, acc_z, gyr_x, gyr_y, gyr_z, mag_x, mag_y, mag_z]
-    #result = predict_from_array(
-    #    raw_data=raw_array,
-    #    activity_label=4,  # label real da atividade (1-7)
-    #    data_type='features',
-    #    split_type='within',
-    #    scenario='all',
-    #    k=10,
-    #    verbose=True,
-    #)
-    #print(f"Predição: A{result['activity_predicted']} (Real: A{result['activity_real']})")
-    #print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")
+    """raw_array = np.random.randn(256, 9).astype(np.float32)  # Shape: (256 linhas, 9 colunas)
+    result = predict_from_array(
+        raw_data=raw_array,
+        activity_label=4,  # label real da atividade (1-7)
+        data_type='features',
+        split_type='within',
+        scenario='all',
+        k=3,
+        verbose=True,
+    )
+    print(f"Predição: A{result['activity_predicted']} (Real: A{result['activity_real']})")
+    print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")"""
     
+
     # Opção 2: Testar com participante fixo (part7)
     # results = evaluate_multiple_csvs(
     #     num_csvs=10,
@@ -352,6 +329,7 @@ try:
     #     k=10,
     # )
     
+    
     #Opção 3: Testar com participante ALEATÓRIO e devices ALEATÓRIOS
     results = evaluate_multiple_csvs(
          num_csvs=15,
@@ -361,13 +339,14 @@ try:
          split_type='within',
          scenario='all',
          k=10,
-     )
-    
+    )
+
 except Exception as e:
     print(f"[Task 6] Erro ao processar CSVs: {e}")
     import traceback
     traceback.print_exc()
-"""
+
+
 
 # ======================================================================
 # TODO 7 — GO FURTHER (BONUS)
