@@ -1,8 +1,6 @@
-# ======================== META 2 ================================
 # ECAC 2025 – TP1 (META 2)
 # Autores: Simão Tomás Botas Carvalho nº 2021223055
 #          Martim Costa Duarte nº 2021275991
-#          Estrutura do projeto refinada com LLM (CHAT-GPT 5)
 
 import sys
 from pathlib import Path
@@ -11,7 +9,6 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 import numpy as np
 
-# Imports estáveis (sem try/except). Assumimos execução a partir do workspace raiz.
 from meta1.preprocessing import data_treatment
 from meta1.features import feature_extractor as fe
 from meta2.smote import meta2_balance
@@ -278,8 +275,8 @@ from models.evaluation import run_evaluation, run_with_params_cli
 
 try:
     # Escolha: usar toda a pipeline (validação + retrain) OU apenas test com parâmetros dados
-    USE_SINGLE_RETRAIN = False  # mudar para True para chamar apenas um cenário com k indicado
-
+    USE_SINGLE_RETRAIN = False  # mudar para True para chamar apenas um cenario com um k
+    #o cenario é definido na secção 4 acima
     if USE_SINGLE_RETRAIN:
         print("5 - Teste único (sem validação)")
         # Usa os parâmetros definidos acima na Secção 4
