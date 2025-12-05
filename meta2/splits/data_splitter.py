@@ -107,7 +107,7 @@ def _partition_counts(total: int, ratios: Tuple[float, float, float]) -> Tuple[i
     return int(counts[0]), int(counts[1]), int(counts[2])
 
 
-def split_within_subject(
+def split_within_subject( # Pega num participante da shuffla os indices e faz o split iterativamente por todos os participantes
     kind: str,
     ratios: Tuple[float, float, float] = (0.6, 0.2, 0.2),
     random_state: int | None = 42,
@@ -140,7 +140,7 @@ def split_within_subject(
     return splits
 
 
-def split_between_subject(
+def split_between_subject( # Pega nos participantes mete numa pool e sorteia 9 para treino, 3 para val e 3 para teste
     kind: str,
     train_subjects: int = 9,
     val_subjects: int = 3,
