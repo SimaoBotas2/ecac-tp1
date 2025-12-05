@@ -240,7 +240,7 @@ def analyze_class_balance():
 
     best = df_sorted.iloc[0]
     print("Melhor equilíbrio:")
-    print(f"• {best['Data Type']} | {best['Split']} | {best['Scenario']} -> Mean Recall={best['Mean Recall']:.4f}, Std={best['Std Recall']:.4f}")
+    print(f"{best['Data Type']} | {best['Split']} | {best['Scenario']} -> Mean Recall={best['Mean Recall']:.4f}, Std={best['Std Recall']:.4f}")
 
 
 

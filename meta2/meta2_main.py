@@ -273,12 +273,12 @@ if DEBUG_SINGLE_MODEL:
 # Treina todos os modelos em train + validation
 # Seleciona melhor k por validation accuracy
 # Avalia no test set (para within e between)
-"""
+
 from models.evaluation import run_evaluation, run_with_params_cli
 
 try:
     # Escolha: usar toda a pipeline (validação + retrain) OU apenas test com parâmetros dados
-    USE_SINGLE_RETRAIN = True  # mudar para True para chamar apenas um cenário com k indicado
+    USE_SINGLE_RETRAIN = False  # mudar para True para chamar apenas um cenário com k indicado
 
     if USE_SINGLE_RETRAIN:
         print("5 - Teste único (sem validação)")
@@ -294,18 +294,18 @@ except (OSError, ValueError, RuntimeError, ImportError) as e:
     print(f"[META2][5] Erro na avaliação: {e}")
     import traceback
     traceback.print_exc()
-"""
+
 # ======================================================================
 # 6 — DEPLOYMENT FUNCTION
 # ======================================================================
-
+"""
 from meta2.predict_new import evaluate_multiple_csvs, predict_from_array
 
 # Task 6: Testar modelo com múltiplos CSVs
 print_section("6 - Deployment com Dados CSV")
 
 try:
-    """raw_array = np.random.randn(256, 9).astype(np.float32)  # Shape: (256 linhas, 9 colunas)
+    raw_array = np.random.randn(256, 9).astype(np.float32)  # Shape: (256 linhas, 9 colunas)
     result = predict_from_array(
         raw_data=raw_array,
         activity_label=4,  # label real da atividade (1-7)
@@ -316,7 +316,7 @@ try:
         verbose=True,
     )
     print(f"Predição: A{result['activity_predicted']} (Real: A{result['activity_real']})")
-    print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")"""
+    print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")
     
 
     # Opção 2: Testar com participante fixo (part7)
@@ -328,7 +328,6 @@ try:
     #     scenario='all',
     #     k=10,
     # )
-    
     
     #Opção 3: Testar com participante ALEATÓRIO e devices ALEATÓRIOS
     results = evaluate_multiple_csvs(
@@ -345,7 +344,7 @@ except Exception as e:
     print(f"[Task 6] Erro ao processar CSVs: {e}")
     import traceback
     traceback.print_exc()
-
+"""
 
 
 # ======================================================================

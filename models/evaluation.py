@@ -34,7 +34,7 @@ class SimpleEvaluation:
     
     def __init__(self, data_processed_path):
         self.data_processed = Path(data_processed_path)
-        self.k_values = [3, 5, 7, 10, 15, 20]
+        self.k_values = [3, 5, 7]
         self.results = {}
         self.best_ks = {}  # Guarda melhor k para cada scenario
         
