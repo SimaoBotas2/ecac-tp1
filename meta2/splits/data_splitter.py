@@ -22,6 +22,7 @@ from utils.progress import progress_bar
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
 SPLITS_DIR = DATA_PROCESSED / "splits"
+ALLOWED_ACTIVITIES = tuple(range(1, 8))
 
 FEATURE_FILES = {
     "X": DATA_PROCESSED / "features_X.csv",
@@ -62,6 +63,14 @@ def _load_dataset(kind: str) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     participants = _ensure_vector(np.loadtxt(files["p"], delimiter=","))
     if X.shape[0] != y.shape[0] or X.shape[0] != participants.shape[0]:
         raise ValueError(f"Dimensões inconsistentes no dataset '{kind}'.")
+
+    mask = np.isin(y, ALLOWED_ACTIVITIES)
+    if not mask.all():
+        removed = int((~mask).sum())
+        print(f"[SPLITS][{kind}] Ignorados {removed} registos fora das atividades 1-7.")
+        X = X[mask]
+        y = y[mask]
+        participants = participants[mask]
     return X, y, participants
 
 
