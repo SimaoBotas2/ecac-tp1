@@ -1,4 +1,3 @@
-# PIPELINE: Processamento de CSV → Features → Scaling
 
 import sys
 from pathlib import Path
@@ -70,7 +69,7 @@ def process_csv_file(csv_path, scenario='all', window_size=256):
             raise ValueError("Nenhuma janela válida extraída")
         X_test_csv_features = np.array(X_features_list[0]).reshape(1, -1)
     except Exception as e:
-        raise RuntimeError(f"Erro ao extrair features: {e}")
+        raise RuntimeError(f"Erro ao extrair features: {e}") from e
     
     scenario_file = ROOT / "data" / "processed" / "scenarios" / 'features' / 'within' / f'{scenario}.npz'
     
@@ -164,7 +163,7 @@ def select_random_csvs(
             try:
                 dev_id = int(csv_file.stem.split('dev')[-1])
                 devices.append(dev_id)
-            except:
+            except ValueError:
                 pass
         devices = sorted(list(set(devices)))
     

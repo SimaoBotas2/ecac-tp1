@@ -1,4 +1,3 @@
-#DEPLOYMENT - Predição com kNN Model
 
 import sys
 from pathlib import Path
@@ -10,6 +9,7 @@ sys.path.append(str(ROOT))
 
 from models.knn import KNNClassifier
 from meta2.pipeline_predict import process_csv_file, select_random_csvs
+from meta1.features import feature_extractor as fe
 
 
 def evaluate_model(
@@ -173,17 +173,13 @@ def predict_from_array(
     # Atividades para extract_features_4_2
     activities_for_extract = np.full(250, activity_label, dtype=int)
     
-    try:
-        from meta1.features import feature_extractor as fe
-        X_features_list, _, _ = fe.extract_features_4_2(
-            accel_data, gyro_data, mag_data, activities_for_extract,
-            sampling_rate=50, participant_ids=None
-        )
-        if len(X_features_list) == 0:
-            raise ValueError("Nenhuma janela válida extraída")
-        X_features = np.array(X_features_list[0]).reshape(1, -1)
-    except Exception as e:
-        raise RuntimeError(f"Erro ao extrair features: {e}")
+    X_features_list, _, _ = fe.extract_features_4_2(
+        accel_data, gyro_data, mag_data, activities_for_extract,
+        sampling_rate=50, participant_ids=None
+    )
+    if len(X_features_list) == 0:
+        raise ValueError("Nenhuma janela válida extraída")
+    X_features = np.array(X_features_list[0]).reshape(1, -1)
     
     # Carregar scaler e escalar
     scenario_file = ROOT / "data" / "processed" / "scenarios" / data_type / split_type / f"{scenario}.npz"

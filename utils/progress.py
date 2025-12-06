@@ -41,7 +41,7 @@ def progress_bar(current, total, label="", width=30):
     sys.stdout.write(prog_str)
     sys.stdout.flush()
     
-    if current >= total - 1:
+    if current >= total:
         sys.stdout.write("\n")
         sys.stdout.flush()
 def progress_with_time(current, total, start_time, label="", width=30):
@@ -85,7 +85,7 @@ def progress_with_time(current, total, start_time, label="", width=30):
     sys.stdout.write(prog_str)
     sys.stdout.flush()
     
-    if current >= total - 1:
+    if current >= total:
         sys.stdout.write("\n")
         sys.stdout.flush()
 

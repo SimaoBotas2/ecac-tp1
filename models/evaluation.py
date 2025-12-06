@@ -1,5 +1,5 @@
 # ======================== EVALUATION - SIMPLE ================================
-# ECAC 2025 – META 2 – Task 5
+# ECAC 2025 – META 2 
 # Treina todos os modelos em train + validation
 # Seleciona melhor k por validation accuracy
 # Avalia no test set
@@ -73,18 +73,18 @@ class SimpleEvaluation:
         
         start_time = time.time()
         for idx, k in enumerate(self.k_values):
-            print(f"\n      [k={k}] Treinando...", flush=True)
+            print(f"\n[k={k}] Treinando...", flush=True)
             iter_start = time.time()
             
             knn = KNNClassifier(k=k)
             knn.fit(X_train, y_train)
             fit_time = time.time() - iter_start
-            print(f"      [k={k}] Fit OK ({fit_time:.2f}s) - Validando...")
+            print(f"[k={k}] Fit OK ({fit_time:.2f}s) - Validando...")
             
             val_acc = knn.score(X_val, y_val)
             val_time = time.time() - iter_start - fit_time
             k_accuracies[k] = val_acc
-            print(f"      [k={k}] Val Acc={val_acc:.4f} ({val_time:.2f}s)", flush=True)
+            print(f"[k={k}] Val Acc={val_acc:.4f} ({val_time:.2f}s)", flush=True)
             
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
@@ -101,7 +101,7 @@ class SimpleEvaluation:
             'k_accuracies': k_accuracies,
         }
         
-        print(f"    MELHOR K: {best_k:2d} com Val Acc={best_val_acc:.4f}")
+        print(f"MELHOR K: {best_k:2d} com Val Acc={best_val_acc:.4f}")
         
         return best_k, best_val_acc, k_accuracies
     
@@ -109,7 +109,7 @@ class SimpleEvaluation:
         """
         FASE 2: Analisa o melhor k para cada scenario
         """
-        print_section("5.1 - Analise do Melhor k")
+        print_section("Analise do Melhor k")
         print()
         print(f"{'Data Type':<15} {'Split':<10} {'Scenario':<10} {'Best k':<8} {'Val Acc':<10}")
         print("-" * 65)
@@ -128,7 +128,7 @@ class SimpleEvaluation:
         """
         FASE 3: Retreina cada modelo com train+val combinados e testa em test
         """
-        print_section("5.2 - Fase 3: Retrain com Train+Val e Teste")
+        print_section("Fase 3: Retrain com Train+Val e Teste")
         print()
         
         data_types = ["features", "embeddings"]
@@ -139,7 +139,7 @@ class SimpleEvaluation:
             print(f"\n=== {split_type.upper()} SUBJECT ===\n")
             
             for data_type in data_types:
-                print(f"  Data Type: {data_type.upper()}")
+                print(f"Data Type: {data_type.upper()}")
                 
                 for scenario in scenarios:
                     key = f"{data_type}_{split_type}_{scenario}"
@@ -148,7 +148,7 @@ class SimpleEvaluation:
                     try:
                         self._retrain_and_test_single(data_type, split_type, scenario, best_k)
                     except (OSError, ValueError, RuntimeError) as e:
-                        print(f"    [ERRO] {e}")
+                        print(f"[ERRO] {e}")
     
     def _retrain_and_test_single(self, data_type, split_type, scenario, best_k):
         """
@@ -169,8 +169,8 @@ class SimpleEvaluation:
         X_trainval = np.vstack([X_train, X_val])
         y_trainval = np.hstack([y_train, y_val])
         
-        print(f"    Combinado: X_trainval={X_trainval.shape}, X_test={X_test.shape}")
-        print(f"    Treinando modelo com k={best_k}...", end="", flush=True)
+        print(f"Combinado: X_trainval={X_trainval.shape}, X_test={X_test.shape}")
+        print(f"Treinando modelo com k={best_k}...", end="", flush=True)
         
         # Treinar modelo final com melhor k
         knn_final = KNNClassifier(k=best_k)
@@ -178,19 +178,19 @@ class SimpleEvaluation:
         
         print(" OK")
         
-        print(f"    Testando em {len(X_test)} amostras...", end="", flush=True)
+        print(f"Testando em {len(X_test)} amostras...", end="", flush=True)
         
         # Avaliar em test
         y_pred_test = knn_final.predict(X_test)
         test_acc = (y_pred_test == y_test).mean()
         
-        print(f" OK - Accuracy={test_acc:.4f}")
+        print(f"OK - Accuracy={test_acc:.4f}")
         
         # Confusion matrix
         cm_test, classes = confusion_matrix(y_test, y_pred_test)
         
         # Compute per-class metrics
-        per_class_metrics = self._compute_per_class_metrics(cm_test, classes)
+        per_class_metrics = self.compute_per_class_metrics(cm_test, classes)
         
         # Store result
         result = {
@@ -208,9 +208,9 @@ class SimpleEvaluation:
         key = f"{data_type}_{split_type}_{scenario}"
         self.results[key] = result
         
-        print(f"    RESULT: Test Acc={test_acc:.4f}")
+        print(f"RESULT: Test Acc={test_acc:.4f}")
     
-    def _compute_per_class_metrics(self, cm, classes):
+    def compute_per_class_metrics(self, cm, classes):
         """Compute precision, recall, F1 for each class."""
         metrics = {}
         
@@ -387,26 +387,12 @@ def run_best_model(data_processed_path, data_type, split_type, scenario):
     evaluator.save_results()
     return evaluator.results
 
-def run_with_params_cli(data_processed_path, data_type, split_type, scenario, k):
-    """CLI helper: retreina + testa um cenário específico com k fornecido."""
-    evaluator = SimpleEvaluation(data_processed_path)
-    evaluator.run_with_params(data_type, split_type, scenario, int(k))
-    evaluator.print_summary()
-    evaluator.print_confusion_matrices()
-    evaluator.save_results()
-    return evaluator.results
-
-
 if __name__ == "__main__":
     # CLI:
     #  - Sem args: corre pipeline completo
     #  - 3 args: data_type split_type scenario -> escolhe melhor k por validação e retreina
-    #  - 4 args: data_type split_type scenario k -> retreina diretamente com k indicado, SEM validação
     DATA_PROCESSED = Path(__file__).resolve().parents[1] / "data" / "processed"
-    if len(sys.argv) == 5:
-        dt, sp, sc, k = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
-        run_with_params_cli(DATA_PROCESSED, dt, sp, sc, k)
-    elif len(sys.argv) == 4:
+    if len(sys.argv) == 4:
         dt, sp, sc = sys.argv[1], sys.argv[2], sys.argv[3]
         run_best_model(DATA_PROCESSED, dt, sp, sc)
     else:

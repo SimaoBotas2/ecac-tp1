@@ -1,6 +1,6 @@
 # ECAC 2025 – TP1 (META 2)
 # Autores: Simão Tomás Botas Carvalho nº 2021223055
-#          Martim Costa Duarte nº 2021275991
+#          Martim Costa Duarte        nº 2021275991
 
 import sys
 from pathlib import Path
@@ -12,13 +12,12 @@ import numpy as np
 from meta1.preprocessing import data_treatment
 from meta1.features import feature_extractor as fe
 from meta2.smote import meta2_balance
-from meta2.embeddings.embeddings_extractor import (
-    extract_embeddings_dataset,
-    save_embeddings_to_csv,
-)
+from meta2.embeddings.embeddings_extractor import extract_embeddings_dataset
+from meta2.embeddings.embeddings_extractor import save_embeddings_to_csv
 from meta2.splits import data_splitter, scenario_builder
-from models.knn import KNNClassifier, print_metrics
+from models.knn import KNNClassifier
 from utils.progress import print_section
+from models.evaluation import run_evaluation
 
 
 # ======================================================================
@@ -49,7 +48,7 @@ SPLIT_RANDOM_STATE = 69
 # ======================================================================
 # 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
 # ======================================================================
-"""
+
 print("\n--- Carregar dados ---")
 
 dados = data_treatment.get_data(participant_selected, sensors_selected)  # type: ignore[arg-type]
@@ -60,12 +59,11 @@ dados = dados[mask_1_to_7]
 activities = activities[mask_1_to_7]
 
 print(f"Após filtrar atividades 1-7: {dados.shape}")
-"""
+
 # ======================================================================
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 
-"""
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
     try:
@@ -85,13 +83,13 @@ else:
     else:
         print("  Sem amostras após filtragem.")
 
-"""
+
 
 # ======================================================================
 #  1.2 — SMOTE
 #  1.3 — VISUALIZAR SÍNTESE DA ATIVIDADE 4 DO PARTICIPANTE 3
 # ======================================================================
-"""
+
 print("\n=== 1.2 e 1.3 - Gerar e Visualizar Amostras Sintéticas ===")
 
 activity_for_aug = 4
@@ -122,7 +120,7 @@ if not force_plot_recompute:
         )
         if total_participant_windows == 0:
             raise ValueError("Participante sem janelas no ficheiro pré-computado.")
-    except Exception as e:
+    except (OSError, ValueError) as e:
         print(f"[META2][1.2/1.3] Aviso: falha ao usar features pré-computadas ({e}). A re-extrair do bruto...")
         force_plot_recompute = True
 
@@ -138,13 +136,12 @@ try:
     )
 except Exception as e:
     print(f"[META2] Erro em SMOTE/visualização: {e}")
-    print("TODO 1.2/1.3: verificar meta2_balance.py")
-"""
+
 
 # ======================================================================
 # 2 — EXTRAÇÃO DE EMBEDDINGS
 # ======================================================================
-"""
+
 print_section("2.1 - Extrair Embeddings")
 
 try:
@@ -177,7 +174,7 @@ try:
 
 except Exception as e:
     print(f"[EMBEDDINGS] Erro: {e}")
-"""
+
 
 # ======================================================================
 # 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
@@ -270,21 +267,9 @@ if DEBUG_SINGLE_MODEL:
 # Seleciona melhor k por validation accuracy
 # Avalia no test set (para within e between)
 
-from models.evaluation import run_evaluation, run_with_params_cli
-
 try:
-    # Escolha: usar toda a pipeline (validação + retrain) OU apenas test com parâmetros dados
-    USE_SINGLE_RETRAIN = False  # mudar para True para chamar apenas um cenario com um k
-    #o cenario é definido na secção 4 acima
-    if USE_SINGLE_RETRAIN:
-        print("5 - Teste único (sem validação)")
-        # Usa os parâmetros definidos acima na Secção 4
-        evaluation_results = run_with_params_cli(DATA_PROCESSED, DATA_TYPE, SPLIT_TYPE, SCENARIO, K_VALUE)
-    elif run_evaluation:
-        print("5 - Evaluation pipeline completa")
-        evaluation_results = run_evaluation(DATA_PROCESSED)
-    else:
-        print("[META2][5] Aviso: run_evaluation não pôde ser importado")
+    print("5 - Evaluation pipeline completa")
+    evaluation_results = run_evaluation(DATA_PROCESSED)
     
 except (OSError, ValueError, RuntimeError, ImportError) as e:
     print(f"[META2][5] Erro na avaliação: {e}")
@@ -294,7 +279,7 @@ except (OSError, ValueError, RuntimeError, ImportError) as e:
 # ======================================================================
 # 6 — DEPLOYMENT FUNCTION
 # ======================================================================
-"""
+
 from meta2.predict_new import evaluate_multiple_csvs, predict_from_array
 
 # Task 6: Testar modelo com múltiplos CSVs
@@ -314,18 +299,8 @@ try:
     print(f"Predição: A{result['activity_predicted']} (Real: A{result['activity_real']})")
     print(f"Correto: {result['is_correct']} (Acurácia: {result['accuracy']:.1%})")
     
-
-    # Opção 2: Testar com participante fixo (part7)
-    # results = evaluate_multiple_csvs(
-    #     num_csvs=10,
-    #     part_folder='part7',
-    #     data_type='features',
-    #     split_type='within',
-    #     scenario='all',
-    #     k=10,
-    # )
     
-    #Opção 3: Testar com participante ALEATÓRIO e devices ALEATÓRIOS
+    #Opção 2: Testar com participante ALEATÓRIO e devices ALEATÓRIOS
     results = evaluate_multiple_csvs(
          num_csvs=15,
          random_participant=True,  # Escolhe participante aleatório (0-14)
@@ -340,7 +315,7 @@ except Exception as e:
     print(f"[Task 6] Erro ao processar CSVs: {e}")
     import traceback
     traceback.print_exc()
-"""
+
 
 
 # ======================================================================
