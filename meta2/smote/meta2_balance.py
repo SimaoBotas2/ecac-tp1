@@ -21,6 +21,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from utils.progress import progress_bar
 from meta2.smote import smote_generator
+from meta2.splits.meta2_prepare import build_meta2
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"

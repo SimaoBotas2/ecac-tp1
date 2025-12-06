@@ -218,7 +218,7 @@ try:
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
 
-
+"""
 
 # ======================================================================
 # 4 — EXEMPLO: TREINAR UM ÚNICO MODELO kNN
@@ -228,7 +228,7 @@ Exemplo de treino de um modelo kNN individual.
 Altere os parâmetros abaixo para testar diferentes cenários.
 """
 
-"""DATA_TYPE = "features"      # "features" ou "embeddings"
+DATA_TYPE = "features"      # "features" ou "embeddings"
 SPLIT_TYPE = "within"       # "within" ou "between"
 SCENARIO = "all"            # "all", "pca" ou "relief"
 K_VALUE = 3                # Número de vizinhos
@@ -268,7 +268,7 @@ if DEBUG_SINGLE_MODEL:
             row_str = "  ".join(f"{cm_test[i, j]:4d}" for j in range(len(classes)))
             print(f"A{true_class}  {row_str}")
     else:
-        print(f"[ERRO] Ficheiro não encontrado: {scenario_file}")"""
+        print(f"[ERRO] Ficheiro não encontrado: {scenario_file}")
 
 # ======================================================================
 # 5 — EVALUATION PIPELINE
@@ -277,11 +277,8 @@ if DEBUG_SINGLE_MODEL:
 # Seleciona melhor k por validation accuracy
 # Avalia no test set (para within e between)
 
-try:
-    print("5 - Evaluation pipeline completa")
-    evaluation_results = run_evaluation(DATA_PROCESSED)
-"""
-from models.evaluation import run_evaluation, run_with_params_cli
+
+from models.evaluation import SimpleEvaluation
 
 try:
     # Escolha: usar toda a pipeline (validação + retrain) OU apenas test com parâmetros dados
@@ -290,12 +287,14 @@ try:
     if USE_SINGLE_RETRAIN:
         print("5 - Teste único (sem validação)")
         # Usa os parâmetros definidos acima na Secção 4
-        evaluation_results = run_with_params_cli(DATA_PROCESSED, DATA_TYPE, SPLIT_TYPE, SCENARIO, K_VALUE)
-    elif run_evaluation:
+        evaluator = SimpleEvaluation(DATA_PROCESSED)
+        evaluation_results = evaluator.run_with_params(DATA_TYPE, SPLIT_TYPE, SCENARIO, K_VALUE)
+        evaluator.print_summary()
+        evaluator.print_confusion_matrices()
+        evaluator.save_results()
+    else:
         print("5 - Evaluation pipeline completa")
         evaluation_results = run_evaluation(DATA_PROCESSED)
-    else:
-        print("[META2][5] Aviso: run_evaluation não pôde ser importado")
     
 except (OSError, ValueError, RuntimeError, ImportError) as e:
     print(f"[META2][5] Erro na avaliação: {e}")
