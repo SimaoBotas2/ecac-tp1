@@ -67,7 +67,7 @@ class KNNClassifier:
         self.is_fitted = True
         return self
     
-    def _compute_distances_vectorized(self, x_test, X_train, xp):
+    def compute_distances(self, x_test, X_train, xp):
         """Calcula vetorizado as distâncias entre x_test e todos os pontos em X_train.
         
         Parameters
@@ -120,17 +120,17 @@ class KNNClassifier:
                 try:
                     # Usar GPU
                     x_gpu = cp.asarray(x)
-                    distances_gpu = self._compute_distances_vectorized(x_gpu, self.X_train_gpu, cp)
+                    distances_gpu = self.compute_distances(x_gpu, self.X_train_gpu, cp)
                     distances = cp.asnumpy(distances_gpu)
                 except (RuntimeError, OSError, FileNotFoundError) as e:
                     # Se GPU falhar, cair para CPU com aviso
                     if not self.gpu_fallback_warned:
                         print(f"\n[GPU FALLBACK] GPU falhou ({type(e).__name__}). Usando CPU.")
                         self.gpu_fallback_warned = True
-                    distances = self._compute_distances_vectorized(x, self.X_train, np)
+                    distances = self.compute_distances(x, self.X_train, np)
             else:
                 # Usar CPU
-                distances = self._compute_distances_vectorized(x, self.X_train, np)
+                distances = self.compute_distances(x, self.X_train, np)
             
             # Encontrar k vizinhos mais próximos
             k_indices = np.argsort(distances)[:self.k]

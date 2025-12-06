@@ -11,8 +11,8 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
-# Preferir data/results; se não existir, usar data/processed/results/evaluation
-JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "evaluation_results.json"
+# Caminho para o ficheiro JSON de resultados
+JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "ALL_RESULTS.json"
 
 
 def _infer_fields_from_key(key: str):

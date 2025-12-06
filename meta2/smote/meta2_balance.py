@@ -20,6 +20,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from utils.progress import progress_bar
+from meta2.splits.meta2_prepare import build_meta2
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
@@ -157,16 +158,8 @@ def run(
 
     Returns path to saved output (either original meta2 or augmented CSV).
     """
-    if ensure_meta2:
-        try:
-            import meta2_prepare
-
-            if hasattr(meta2_prepare, 'build_meta2'):
-                meta2_prepare.build_meta2()
-                print(f"[meta2_balance] Ensured '{meta2_path}' exists via meta2_prepare.build_meta2().")
-        except Exception as e:
-            print(f"[meta2_balance] Warning: could not run meta2_prepare.build_meta2(): {e}")
-
+    build_meta2()
+    
     if not os.path.exists(meta2_path):
         raise FileNotFoundError(meta2_path)
 
@@ -246,15 +239,8 @@ def generate_and_visualize_samples_for_participant(
 
     Saves plot to `out_plot` (if provided) or `meta2_part{participant}_act{activity}.png`.
     """
-    try:
-        from meta1.preprocessing import data_treatment
-        from meta1.features import feature_extractor as fe
-    except ImportError:
-        try:
-            import data_treatment  # type: ignore
-            import feature_extractor as fe  # type: ignore
-        except Exception as e:  # pragma: no cover
-            raise RuntimeError(f"Missing dependency for generation/plot: {e}")
+    from meta1.preprocessing import data_treatment
+    from meta1.features import feature_extractor as fe
     import matplotlib.pyplot as plt
 
     allowed_set = set(allowed_activities)
