@@ -44,7 +44,7 @@ FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
 all_participants = list(range(15))
-SPLIT_RANDOM_STATE = 42
+SPLIT_RANDOM_STATE = 69
 
 # ======================================================================
 # 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7

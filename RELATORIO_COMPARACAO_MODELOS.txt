@@ -1,0 +1,119 @@
+
+
+Melhor modelo obtido: Features + Within-Subject + All + k=3 → 78.2% de acurácia
+
+================================================================================
+
+2. IMPACTO DO VALOR DE k
+
+O valor de k tem impacto marginal no desempenho global (~0.6% de diferença máxima):
+
+┌─────────────────────────────────────────────────────┐
+│ k  │ Acurácia Validação (média) │ Diferença vs k=7 │
+├─────────────────────────────────────────────────────┤
+│ 7  │ 61.20%                     │ +0.00% (melhor)  │
+│ 5  │ 60.71%                     │ -0.49%           │
+│ 3  │ 60.57%                     │ -0.63%           │
+└─────────────────────────────────────────────────────┘
+
+CONCLUSÃO: k=7 é marginalmente melhor em média (~0.5-0.6%), mas k=3 domina 
+em cenários específicos (Within-Subject + All = 78.2%).
+
+================================================================================
+
+3. IMPACTO DA ESTRATÉGIA DE SPLITTING
+
+O splitting é o fator MAIS IMPORTANTE com diferença de 20 pontos percentuais:
+
+┌──────────────────────────────────────────────────────┐
+│ Estratégia    │ Acurácia Validação (média)          │
+├──────────────────────────────────────────────────────┤
+│ Within-Subject│ 69.82%  (participantes diferentes)   │
+│ Between-Subject│ 50.08%  (novos participantes)       │
+│ Diferença     │ 19.74 pontos percentuais             │
+└──────────────────────────────────────────────────────┘
+
+INTERPRETAÇÃO: Within-Subject indica que o modelo aprende características
+específicas de cada participante. Para implantação em novos utilizadores,
+espera-se ~50% de acurácia (acima da classificação aleatória: 14%).
+
+================================================================================
+
+4. IMPACTO DO TIPO DE DADOS
+
+Features superam significativamente embeddings em 10 pontos percentuais:
+
+┌──────────────────────────────────────────────────────┐
+│ Tipo de Dados │ Acurácia Validação (média)          │
+├──────────────────────────────────────────────────────┤
+│ Features      │ 64.25%  (252 características)        │
+│ Embeddings    │ 54.05%  (representação aprendida)   │
+│ Diferença     │ 10.20 pontos percentuais             │
+└──────────────────────────────────────────────────────┘
+
+RECOMENDAÇÃO: Utilizar Features em vez de Embeddings para melhor desempenho.
+
+================================================================================
+
+5. IMPACTO DO CENÁRIO DE FEATURES
+
+┌──────────────────────────────────────────────────────┐
+│ Cenário  │ Acurácia Validação (média)               │
+├──────────────────────────────────────────────────────┤
+│ All      │ 67.30%  (todas as 252 características)   │
+│ PCA      │ 61.59%  (90% variância = ~90 features)   │
+│ Relief   │ 57.57%  (top 15 features)                │
+│ Diferença│ 9.73 pontos (All vs Relief)              │
+└──────────────────────────────────────────────────────┘
+
+CONCLUSÃO: Manter todas as features (All) é preferível. Redução de features
+via PCA/Relief piora desempenho significativamente.
+
+================================================================================
+
+6. TOP 5 MELHORES MODELOS   
+
+┌────────────────────────────────────────────────────────────┐
+│ Rank │ Configuração                    │ Val Acc │ Test Acc│
+├────────────────────────────────────────────────────────────┤
+│  1   │ Features|Within|All|k=3         │ 78.2%   │ 78.8%  │
+│  2   │ Features|Within|All|k=5         │ 78.2%   │ 77.9%  │
+│  3   │ Features|Within|All|k=7         │ 77.2%   │ 77.2%  │
+│  4   │ Features|Within|PCA|k=3         │ 76.8%   │ 76.5%  │
+│  5   │ Features|Within|PCA|k=5         │ 76.5%   │ 76.5%  │
+└────────────────────────────────────────────────────────────┘
+
+================================================================================
+
+7. DISTRIBUIÇÃO POR ATIVIDADE (Mean Recall)
+
+Melhor modelo (Features|Within|All) balanceamento de recall por classe:
+
+Mean Recall: 75.59% (±22.57%)
+
+Isto significa que em média, o modelo recupera corretamente 76% de cada
+classe de atividade, com variação de ±23% entre classes.
+
+================================================================================
+
+8. RECOMENDAÇÕES DE IMPLANTAÇÃO
+
+CENÁRIO A: Sistema Personalizado (adaptado por utilizador)
+├─ Configuração: Features | Within-Subject | All | k=3-5
+├─ Acurácia esperada: 78%
+├─ Aplicação: Apps que aprendem com dados do utilizador
+└─ Implementação: Retreinar com dados históricos do utilizador
+
+CENÁRIO B: Sistema Genérico (novos utilizadores)
+├─ Configuração: Features | Between-Subject | k=7
+├─ Acurácia esperada: ~60-66%
+├─ Aplicação: Sistema que funciona sem personalização
+└─ Implementação: Usar modelo treinado em múltiplos utilizadores
+
+CENÁRIO C: Baseline Rápido
+├─ Configuração: Features | Within-Subject | PCA | k=3
+├─ Acurácia esperada: 76.8%
+├─ Aplicação: Quando precisar de redução de features
+└─ Vantagem: 90% da performance com menos features
+
+================================================================================

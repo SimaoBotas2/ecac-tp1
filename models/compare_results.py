@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
 # Caminho para o ficheiro JSON de resultados
-JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "ALL_RESULTS.json"
+JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "ALL_RESULTS_seed_42.json"
 
 
 def _infer_fields_from_key(key: str):
