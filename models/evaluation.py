@@ -13,15 +13,9 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-try:
-    from knn import KNNClassifier, confusion_matrix
-except ImportError:
-    from models.knn import KNNClassifier, confusion_matrix
+from models.knn import KNNClassifier, confusion_matrix
+from utils.progress import print_section, progress_with_time
 
-try:
-    from utils.progress import print_section, progress_with_time
-except ImportError:
-    from utils.progress import print_section, progress_with_time
 
 
 class SimpleEvaluation:

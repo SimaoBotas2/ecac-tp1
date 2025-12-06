@@ -182,6 +182,7 @@ def prepare_scenarios(
     relief_top_k: int = 15,
     relief_neighbors: int = 10,
     relief_max_samples: int | None = 5000,
+    random_state: int | None = 42,
     save: bool = True,
 ) -> Dict[str, ScenarioResult]:
     """Compute normalised/PCA/ReliefF datasets for a given split strategy."""
@@ -251,6 +252,7 @@ def prepare_scenarios(
         relief_top_k,
         relief_neighbors,
         max_samples=relief_max_samples,
+        random_state=random_state,
     )
     elapsed = time.time() - start
     print(f"  ✓ ReliefF fitted in {elapsed:.2f}s ({len(relief_idx)} top features selected)")

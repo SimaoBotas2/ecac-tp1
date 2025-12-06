@@ -40,7 +40,7 @@ FORCE_SPECIFIC_FEATURE_RECOMPUTE = False
 # ======================================================================
 # 0 — DEFINIR PARÂMETROS BASE
 # ======================================================================
-"""
+
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
 all_participants = list(range(15))
@@ -49,7 +49,7 @@ SPLIT_RANDOM_STATE = 42
 # ======================================================================
 # 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
 # ======================================================================
-
+"""
 print("\n--- Carregar dados ---")
 
 dados = data_treatment.get_data(participant_selected, sensors_selected)  # type: ignore[arg-type]
@@ -177,21 +177,20 @@ try:
 
 except Exception as e:
     print(f"[EMBEDDINGS] Erro: {e}")
-    print("TODO 2.1: completar embeddings_extractor.py")
 """
 
 # ======================================================================
 # 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
 # ======================================================================
 """
-Task 3.1 - TVT 60-20-20 within subject
-Task 3.2 - 9 train / 3 val / 3 test between subjects
-Task 3.3 - Discuss differences (written)
-Task 3.4 - Prepare datasets:
+3.1 - TVT 60-20-20 within subject
+3.2 - 9 train / 3 val / 3 test between subjects
+3.3 - Discuss differences (written)
+3.4 - Prepare datasets:
       a) full
       b) PCA → 90%
       c) ReliefF → top 15
-
+"""
 
 print_section("3.1 / 3.2 - Data Splitting (Features & Embeddings)")
 try:
@@ -205,14 +204,14 @@ try:
     )
     print("[META2][3.1 e 3.2] Splits guardados em data/processed/splits.")
 
-    scenario_builder.prepare_scenarios("features", "within", splits=within_features)
-    scenario_builder.prepare_scenarios("embeddings", "within", splits=within_embeddings)
-    scenario_builder.prepare_scenarios("features", "between", splits=between_features)
-    scenario_builder.prepare_scenarios("embeddings", "between", splits=between_embeddings)
+    scenario_builder.prepare_scenarios("features", "within", splits=within_features, random_state=SPLIT_RANDOM_STATE)
+    scenario_builder.prepare_scenarios("embeddings", "within", splits=within_embeddings,random_state=SPLIT_RANDOM_STATE)
+    scenario_builder.prepare_scenarios("features", "between", splits=between_features,random_state=SPLIT_RANDOM_STATE)
+    scenario_builder.prepare_scenarios("embeddings", "between", splits=between_embeddings,random_state=SPLIT_RANDOM_STATE)
     print("[META2][3.4] Cenários guardados em data/processed/scenarios.")
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
-"""
+
 
 # ======================================================================
 # 4 — EXEMPLO: TREINAR UM ÚNICO MODELO kNN
