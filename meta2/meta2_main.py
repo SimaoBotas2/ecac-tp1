@@ -64,6 +64,7 @@ print(f"Após filtrar atividades 1-7: {dados.shape}")
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 
+"""
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
     try:
@@ -81,9 +82,9 @@ else:
         ratio = counts.max() / max(counts.min(), 1)
         print(f"  Imbalance ratio (max/min): {ratio:.2f}")
     else:
-        print("  Sem amostras após filtragem.")
+        print("Sem amostras após filtragem.")
 
-
+"""
 
 # ======================================================================
 #  1.2 — SMOTE

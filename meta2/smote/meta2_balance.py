@@ -12,15 +12,15 @@ Functions:
  - run_meta2(...): high-level entrypoint used by `mainActivity.py`
 """
 
+
 from collections import Counter
 import numpy as np
 import os
-from typing import Tuple
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from utils.progress import progress_bar
-from meta2.splits.meta2_prepare import build_meta2
+from meta2.smote import smote_generator
 
 ROOT = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = ROOT / "data" / "processed"
@@ -70,80 +70,6 @@ def analyze(path: str = FILE, activities=range(1, 8)):
     return counts
 
 
-def _pairwise_distances(A: np.ndarray) -> np.ndarray:
-    sq = np.sum(A * A, axis=1, keepdims=True)
-    d2 = sq + sq.T - 2 * (A @ A.T)
-    np.maximum(d2, 0, out=d2)
-    return np.sqrt(d2)
-
-
-def generate_smote_samples(
-    X: np.ndarray,
-    y: np.ndarray,
-    activity_label: int,
-    K: int,
-    k_neighbors: int = 5,
-    random_state: int | None = None,
-    participants: np.ndarray | None = None,
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray | None]:
-    """Generate K synthetic samples for the given activity using SMOTE.
-
-    Returns (X_aug, y_aug, participants_aug). If `participants` is None,
-    the third value is None as well.
-    """
-    if K <= 0:
-        return X.copy(), y.copy(), participants.copy() if participants is not None else None
-    rng = np.random.default_rng(random_state)
-
-    if participants is not None and len(participants) != len(y):
-        raise ValueError("Participants array must align with y labels.")
-
-    mask = (y == activity_label)
-    X_min = X[mask]
-    n_min = X_min.shape[0]
-    if n_min < 2:
-        raise ValueError("Need at least 2 minority samples for SMOTE.")
-
-    participants_min = participants[mask] if participants is not None else None
-
-    k = min(k_neighbors, n_min - 1)
-    if k < 1:
-        raise ValueError("Not enough samples for the requested k_neighbors.")
-
-    D = _pairwise_distances(X_min)
-    neigh_indices = []
-    for i in range(n_min):
-        idx = np.argsort(D[i])[1 : k + 1]
-        neigh_indices.append(idx)
-
-    synth = []
-    synth_participants: list[int] = []
-    for smote_idx in range(K):
-        progress_bar(smote_idx, K, label="Generating SMOTE samples")
-        
-        i = rng.integers(0, n_min)
-        neighs = neigh_indices[i]
-        j = rng.choice(neighs)
-        xi = X_min[i]
-        xj = X_min[j]
-        gap = rng.random()
-        x_new = xi + gap * (xj - xi)
-        synth.append(x_new)
-        if participants_min is not None:
-            synth_participants.append(int(participants_min[i]))
-
-    X_new = np.vstack([X] + ([np.vstack(synth)] if synth else []))
-    y_new = np.concatenate([y, np.full(len(synth), activity_label, dtype=y.dtype)])
-    participants_new = None
-    if participants is not None:
-        if synth_participants:
-            new_parts = np.array(synth_participants, dtype=participants.dtype)
-        else:
-            new_parts = np.empty(0, dtype=participants.dtype)
-        participants_new = np.concatenate([participants, new_parts])
-    return X_new, y_new, participants_new
-
-
 def run(
     atividade_para_augment: int = 3,
     K: int = 50,
@@ -182,7 +108,8 @@ def run(
         return meta2_path
 
     try:
-        X_aug, y_aug, participants_aug = generate_smote_samples(
+        progress_cb = lambda idx, total: progress_bar(idx, total, label="Generating SMOTE samples")
+        X_aug, y_aug, participants_aug = smote_generator.generate_smote_samples(
             X,
             y,
             atividade_para_augment,
@@ -190,6 +117,7 @@ def run(
             k_neighbors=k_neighbors,
             random_state=random_state,
             participants=participants_subset,
+            progress_callback=progress_cb,
         )
         if participants_aug is None:
             raise RuntimeError("SMOTE did not return participant IDs; ensure participants array is provided.")
@@ -307,8 +235,14 @@ def generate_and_visualize_samples_for_participant(
         raise ValueError(f"Need at least 2 samples of activity {activity} for SMOTE (found {n_target}).")
 
     # 5) Apply SMOTE (using only this participant's X,y)
-    X_aug, y_aug, _ = generate_smote_samples(
-        X, y, activity, K=K, k_neighbors=5, random_state=random_state, participants=np.full(len(y), participante)
+    X_aug, y_aug, _ = smote_generator.generate_smote_samples(
+        X,
+        y,
+        activity,
+        K=K,
+        k_neighbors=5,
+        random_state=random_state,
+        participants=np.full(len(y), participante),
     )
     n_synth = X_aug.shape[0] - X.shape[0]
     print(f"[meta2_balance] Generated {n_synth} synthetic samples for activity {activity} (K={K}).")
