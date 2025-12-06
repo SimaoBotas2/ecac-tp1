@@ -178,8 +178,7 @@ def plot_kmeans_outliers(distances, activities, outliers):
     colors = np.concatenate(colors)
 
     plt.figure(figsize=(14, 6))
-    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20)
-    
+    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20) 
     plt.xticks(unique_acts, [f"A{int(a)}" for a in unique_acts])
     plt.xlabel("Atividade")
     plt.ylabel("Distância ao centróide")
