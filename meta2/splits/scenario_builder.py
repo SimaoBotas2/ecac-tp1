@@ -3,9 +3,9 @@
 For every split (train/val/test) produced by `data_splitter`, this module
 creates three downstream datasets per kind (features/embeddings):
 
-1. `all`    – StandardScaler-normalised features (fit on train only).
-2. `pca`    – PCA projection keeping >= target variance (fit on train only).
-3. `relief` – ReliefF top-k feature subset (fit on train only).
+1. `all`    - StandardScaler-normalised features (fit on train only).
+2. `pca`    - PCA projection keeping >= target variance (fit on train only).
+3. `relief` - ReliefF top-k feature subset (fit on train only).
 
 All derived datasets are persisted to `data/processed/scenarios/<kind>/<strategy>/`
 so they can be re-used later without re-computing transformations.
