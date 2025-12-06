@@ -7,9 +7,10 @@ from collections import Counter
 import sys
 from pathlib import Path
 import time
+from utils.progress import progress_with_time
 
 
-# Mude para True para usar GPU (requer CuPy instalado)
+# Mudar para True para usar GPU (requer CuPy instalado)
 USE_GPU = True
 
 # Tentar importar CuPy se GPU estiver ativada
@@ -27,13 +28,6 @@ else:
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-try:
-    from utils.progress import progress_with_time
-except ImportError:
-    # Fallback: definir função simples se não conseguir importar
-    def progress_with_time(current, total, start_time, label="Progress", width=30):
-        """Simple progress function if utils.progress is not available."""
-        pass
 
 
 class KNNClassifier:
