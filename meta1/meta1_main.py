@@ -13,26 +13,15 @@ sys.path.append(str(ROOT))
 
 DATA_PROCESSED = ROOT / "data" / "processed"
 
-# IMPORTS AJUSTADOS À ESTRUTURA NOVA
-try:
-    from meta1.preprocessing import data_treatment, statistic_significance
-    from meta1.outliers import boxplot, k_means, zscore as z
-    from meta1.features import feature_extractor as fe, feature_selection as fs
-    from utils.config import DEBUG
-except ImportError:
-    # Fallback - tentar importar diretamente
-    try:
-        from meta1.preprocessing import data_treatment, statistic_significance
-        from meta1.outliers import boxplot, k_means, zscore as z
-        from meta1.features import feature_extractor as fe, feature_selection as fs
-        from utils.config import DEBUG
-    except ImportError:
-        DEBUG = False
-        pass
+from meta1.preprocessing import data_treatment, statistic_significance
+from meta1.outliers import boxplot, k_means, dbscan,zscore as z
+from meta1.features import feature_extractor as fe, feature_selection as fs
+from utils.config import DEBUG
 
-# Todos os participantes para 3.1 (como exige o enunciado)
-all_participants = list(range(15))
-all_sensors = [1, 2, 3, 4, 5]
+
+# Todos os participantes para 3.1
+all_participants = [1,2,3]
+all_sensors = [1,2,3]
 
 # Participante para features / Kmeans / DBSCAN
 participant_selected = 3
@@ -117,7 +106,7 @@ k_means.plot_kmeans_outliers(distances, labels_filt, outliers_kmeans)
 # ======================================================================
 # 3.7.1) DBSCAN (BÓNUS) – comentado se não quiseres correr sempre
 # ======================================================================
-"""
+
 print("\n=== 3.7.1 - DBSCAN (BÓNUS) ===")
 
 eps = 0.04
@@ -125,14 +114,13 @@ db_data, db_clusters, db_labels = dbscan.dbscan_cluster(
     modules_norm, activities, atividades_selecionadas, eps
 )
 
-dbscan.plot_dbscan_results_3d(db_data, db_clusters, db_labels, atividades_selecionadas)
+#dbscan.plot_dbscan_results_3d(db_data, db_clusters, db_labels, atividades_selecionadas)
 dbscan.plot_dbscan_outliers(db_data, db_clusters, db_labels)
-"""
+
 
 # ======================================================================
 # 4.1) SIGNIFICÂNCIA ESTATÍSTICA
 # ======================================================================
-
 print("\n=== 4.1 - SIGNIFICÂNCIA ESTATÍSTICA ===")
 
 modules_norm2 = data_treatment.normalize_range(modules)
@@ -162,8 +150,6 @@ participants_windows = np.array([
     for info in winfo
 ], dtype=int)
 np.savetxt(DATA_PROCESSED / "features_participant.csv", participants_windows, delimiter=",", fmt="%d")
-
-print(f"Features extraídas. Shape: {Xfeat.shape}")
 
 # ======================================================================
 # 4.3) PCA

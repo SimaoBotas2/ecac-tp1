@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from sklearn.cluster import DBSCAN
 from math import ceil
 from utils.config import DEBUG
+from utils.progress import progress_with_time
+import time
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -47,8 +49,18 @@ def dbscan_cluster(data, labels, atividades, eps=0.5, min_samples=20):
     labels_filtrados = labels[mask]
 
     # Aplicar DBSCAN
-    db = DBSCAN(eps=eps, min_samples=min_samples,algorithm= 'ball_tree',n_jobs=-1)
-    clusters = db.fit_predict(data_filtrada)
+    start_time = time.time()
+    print("Executando DBSCAN (algoritmo: kdtree)...")
+    try:
+        db = DBSCAN(eps=eps, min_samples=min_samples, algorithm='kd_tree', n_jobs=1)
+        clusters = db.fit_predict(data_filtrada)
+    except MemoryError:
+        print("Memória insuficiente com kdtree, tentando com brute force...")
+        db = DBSCAN(eps=eps, min_samples=min_samples, algorithm='brute', n_jobs=1)
+        clusters = db.fit_predict(data_filtrada)
+    
+    elapsed = time.time() - start_time
+    print(f"DBSCAN concluído em {elapsed:.2f}s")
 
     unique_acts = np.unique(labels_filtrados)
     print("\nDensidade de outliers por atividade:")
@@ -94,7 +106,9 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
 
     colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
 
-    for atividade in atividades:
+    start_time = time.time()
+    for idx, atividade in enumerate(atividades):
+        progress_with_time(idx, len(atividades), start_time, label="Plotando DBSCAN")
         #criar mascara das atividades selecionadas
         mask = labels == atividade
         if np.sum(mask) == 0:
@@ -125,7 +139,13 @@ def plot_dbscan_results_3d(data, clusters, labels, atividades, title="DBSCAN por
         plt.tight_layout()
         plt.show()
 
+    progress_with_time(len(atividades), len(atividades), start_time, label="Plotando DBSCAN")
+
 def plot_dbscan_outliers(data, clusters, activities):
+    """
+    Plota num único gráfico: eixo X = atividade, Y = distância (magnitude).
+    Outliers a vermelho, normais a azul.
+    """
     activities = np.asarray(activities)
     unique_activities = np.unique(activities)
 
@@ -138,8 +158,10 @@ def plot_dbscan_outliers(data, clusters, activities):
         d_act = data[mask]
         c_act = clusters[mask]
 
+        # Outliers são identificados por cluster == -1
         out = (c_act == -1)
 
+        # Calcular magnitude/distância de cada ponto
         if d_act.ndim > 1:
             y = np.linalg.norm(d_act, axis=1)
         else:
@@ -154,12 +176,11 @@ def plot_dbscan_outliers(data, clusters, activities):
     colors = np.concatenate(colors)
 
     plt.figure(figsize=(14, 6))
-    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20)
-
+    plt.scatter(x_vals, y_vals, c=colors, alpha=0.6, s=20) 
     plt.xticks(unique_activities, [f"A{int(a)}" for a in unique_activities])
     plt.xlabel("Atividade")
-    plt.ylabel("Magnitude / Distância")
-    plt.title("Outliers DBSCAN por Atividade")
+    plt.ylabel("Distância (magnitude)")
+    plt.title("Outliers DBSCAN (distância por atividade)")
     plt.grid(True, alpha=0.3)
     plt.show()
 

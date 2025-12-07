@@ -4,6 +4,8 @@ import scipy.fft as fft
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 from utils.config import DEBUG
+from utils.progress import progress_with_time
+import time
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -184,7 +186,12 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
     if participant_ids is not None:
         participant_ids = np.asarray(participant_ids)
 
-    for start_idx in range(0, len(accel_data) - window_size + 1, step_size):
+    start_time = time.time()
+    all_indices = list(range(0, len(accel_data) - window_size + 1, step_size))
+    total_iterations = len(all_indices)
+
+    for idx_count, start_idx in enumerate(all_indices):
+        progress_with_time(idx_count, total_iterations, start_time, label="Extração de features")
         end_idx = start_idx + window_size
         total_windows += 1
         
@@ -229,10 +236,8 @@ def extract_features_4_2(accel_data, gyro_data, mag_data, activities, sampling_r
             except Exception as e:
                 print(f"Erro na janela {start_idx}-{end_idx}: {e}")
                 continue
-        
-        # Progresso a cada 1000 janelas
-        if (total_windows % 1000 == 0) and DEBUG:
-            print(f"Processadas {total_windows} janelas...")
+    
+    progress_with_time(total_iterations, total_iterations, start_time, label="Extração de features")
     
     # 4. Converter para arrays numpy
     X = np.array(features_list)  # Features matrix
@@ -258,20 +263,27 @@ def pca_analysis(X_features, target_variance=0.75):
     """Faz análise PCA completa""" # Principal Component Analysis
     
     # Normalizar
+    start_time = time.time()
+    print("Normalizando features...")
     scaler = StandardScaler()
     X_normalized = scaler.fit_transform(X_features) # Normalização das features antes do PCA é crucial para garantir que a variância de cada feature seja considerada igualmente no cálculo das componentes principais.
+    print(f"Features normalizadas em {time.time() - start_time:.2f}s")
     
     # PCA completo para análise
+    start_time = time.time()
+    print(f"Executando PCA com target_variance={target_variance}...")
     pca_full = PCA()
     pca_full.fit(X_normalized) # Encontra a melhor combinação linear das features que captura a maior parte da variância nos dados.
     
     # Encontrar componentes para variância alvo
     variancia_acumulada = np.cumsum(pca_full.explained_variance_ratio_) #soma a variância explicada por cada componente principal de forma acumulativa.
     n_components = np.argmax(variancia_acumulada >= target_variance) + 1 # verifica o primeiro índice onde a variância acumulada atinge ou excede o valor alvo (75% neste caso).
+    print(f"Dimensionalidade reduzida de {X_features.shape[1]} para {n_components} componentes")
     
     # PCA final com componentes certos
     pca_final = PCA(n_components=n_components)
     X_pca = pca_final.fit_transform(X_normalized) # Reduz os dados normalizados para o número ótimo de componentes principais.
+    print(f"PCA concluído em {time.time() - start_time:.2f}s")
     
     # Resultados
     print(f"PCA: {X_features.shape[1]} → {n_components} componentes")
