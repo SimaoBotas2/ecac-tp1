@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from utils.config import DEBUG
-from utils.progress import progress_bar
+from utils.progress import progress_bar, progress_with_time
+import time
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -47,8 +48,9 @@ def k_means_manual(data, labels, atividades, k, max_iters=100):
     # Fazer os centroides com os indices
     centroids = data_filtrada[indices]
 
+    start_time = time.time()
     for iter_num in range(max_iters):
-        progress_bar(iter_num, max_iters, label="K-means iterations")
+        progress_with_time(iter_num, max_iters, start_time, label="K-means iterations")
         
         # Cria uma matriz para guardar o valor da distancia para cada cluster
         distances = np.linalg.norm(data_filtrada[:, np.newaxis, :] - centroids[np.newaxis, :, :], axis=2)
@@ -75,6 +77,8 @@ def k_means_manual(data, labels, atividades, k, max_iters=100):
 
         # Atualiza os centroides
         centroids = new_centroids
+
+    progress_with_time(max_iters, max_iters, start_time, label="K-means iterations")
 
     # Calcular as distancias finais para detecao de outliers
     final_distances = np.linalg.norm(data_filtrada - centroids[clusters], axis=1)

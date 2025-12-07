@@ -1,6 +1,8 @@
 import numpy as np
 from sklearn.feature_selection import f_classif
 from skrebate import ReliefF
+from utils.progress import progress_with_time
+import time
 
 #Trabalho Realizado por:
   #Martim Alves Rodrigues da Costa Duarte nº 2021275991
@@ -30,9 +32,12 @@ def fisher_score_selection(X, y, top_n=10):
     F : np.ndarray
         Scores F de todas as features.
     """
-     
+    start_time = time.time()
+    print("Calculando Fisher Score...")
     F, _ = f_classif(X, y) 
     top_idx = np.argsort(F)[::-1][:top_n]
+    elapsed = time.time() - start_time
+    print(f"Fisher Score calculado em {elapsed:.2f}s")
     return top_idx, F
 
 def reliefF_selection(X, y, top_n=10, n_neighbors=10):
@@ -57,10 +62,14 @@ def reliefF_selection(X, y, top_n=10, n_neighbors=10):
     scores : np.ndarray
         Importância atribuída a cada feature.
     """
+    start_time = time.time()
+    print("Calculando ReliefF (pode ser longo)...")
     relief = ReliefF(n_neighbors=n_neighbors, n_features_to_select=top_n)
     relief.fit(X, y)
     top_idx = relief.top_features_[:top_n]
     scores = relief.feature_importances_
+    elapsed = time.time() - start_time
+    print(f"ReliefF calculado em {elapsed:.2f}s")
     return top_idx, scores
 
 def print_selection(name, indices, scores, feature_names):

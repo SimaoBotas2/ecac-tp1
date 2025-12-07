@@ -8,8 +8,4 @@ data/raw/
 data/processed/
 
 meta2/results/
-
-# Trained models and pickle files
 models/trained_models/
-*.pkl
-*.pickle
