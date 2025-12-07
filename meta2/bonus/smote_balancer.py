@@ -30,7 +30,7 @@ def _print_distribution(title: str, labels: np.ndarray) -> Dict[int, int]:
     total = int(labels.size)
     print(f"\n[{title}] Distribuição das classes (train)")
     if total == 0:
-        print("  ⚠ Treino vazio; nada para analisar.")
+        print("Treino vazio; nada para analisar.")
         return counts
     for cls in sorted(counts):
         pct = (counts[cls] / total) * 100 if total else 0.0
@@ -98,7 +98,7 @@ def balance_scenario_with_smote(
             if count >= target_min:
                 continue
             if count < 2:
-                print(f"  ⚠ Classe {cls} tem apenas {count} amostras; SMOTE requer >=2. Ignorada.")
+                print(f"Classe {cls} tem apenas {count} amostras; SMOTE requer >=2. Ignorada.")
                 continue
             needed = target_min - count
             print(f"  → Classe {cls}: +{needed} amostras (target {target_min})")
