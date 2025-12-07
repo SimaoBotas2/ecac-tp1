@@ -78,7 +78,6 @@ def run(
     random_state: int | None = 42,
     meta2_path: str | Path = FILE,
     out_path: str | Path = DATA_PROCESSED / 'meta2_features_aug.csv',
-    ensure_meta2: bool = True,
     participant_filter: int | None = None,
 ) -> str:
     """High-level operation: ensure meta2 exists, analyze and optionally SMOTE.
@@ -102,7 +101,6 @@ def run(
     y = y_full[mask]
     participants_subset = participants[mask]
 
-    counts = analyze(meta2_path)
 
     if np.sum(y == atividade_para_augment) < 2:
         print(f"[meta2_balance] Not enough samples of activity {atividade_para_augment} for SMOTE.")
@@ -252,7 +250,6 @@ def generate_and_visualize_samples_for_participant(
     synth_idx = np.arange(X.shape[0], X_aug.shape[0])
 
     unique_acts = np.unique(y_aug)
-    import matplotlib.pyplot as plt  # ensure plt is available here
     cmap = plt.get_cmap('tab10')
     color_map = {act: cmap(i % 10) for i, act in enumerate(unique_acts)}
 

@@ -1,6 +1,6 @@
 # ======================== COMPARE kNN RESULTS ================================
 # Comparar diferentes valores de k do kNN
-# Agora lê resultados de JSON em data/results (ou fallback em data/processed/results/evaluation)
+# Lê resultados de JSON em data/results
 
 import sys
 from pathlib import Path
@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.append(str(ROOT))
 
 # Caminho para o ficheiro JSON de resultados
-JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "ALL_RESULTS_seed_42.json"
+JSON_PRIMARY = ROOT / "data" / "processed" / "results" / "evaluation" / "evaluation_results.json"
 
 
 def _infer_fields_from_key(key: str):
@@ -200,26 +200,46 @@ def analyze_class_balance():
             per_class = entry.get('per_class_metrics')
             if not isinstance(per_class, dict):
                 continue
-            # usar recall como taxa de acerto por classe
+            # Coletar recall, precision e f1-score por classe
             recalls = []
+            precisions = []
+            f1_scores = []
             for _, metrics in per_class.items():
                 try:
                     r = float(metrics.get('recall'))
+                    p = float(metrics.get('precision'))
+                    f = float(metrics.get('f1'))  # JSON tem 'f1', não 'f1-score'
+                    recalls.append(r)
+                    precisions.append(p)
+                    f1_scores.append(f)
                 except (TypeError, ValueError):
                     continue
-                recalls.append(r)
             if not recalls:
                 continue
+            
+            # Calcular médias e desvios padrão
             mean_recall = sum(recalls) / len(recalls)
-            # desvio padrão simples
-            var = sum((r - mean_recall) ** 2 for r in recalls) / len(recalls)
-            std_recall = var ** 0.5
+            var_recall = sum((r - mean_recall) ** 2 for r in recalls) / len(recalls)
+            std_recall = var_recall ** 0.5
+            
+            mean_precision = sum(precisions) / len(precisions)
+            var_precision = sum((p - mean_precision) ** 2 for p in precisions) / len(precisions)
+            std_precision = var_precision ** 0.5
+            
+            mean_f1 = sum(f1_scores) / len(f1_scores)
+            var_f1 = sum((f - mean_f1) ** 2 for f in f1_scores) / len(f1_scores)
+            std_f1 = var_f1 ** 0.5
+            
             rows.append({
                 'Data Type': data_type,
                 'Split': split,
                 'Scenario': scenario,
                 'Mean Recall': mean_recall,
                 'Std Recall': std_recall,
+                'Mean Precision': mean_precision,
+                'Std Precision': std_precision,
+                'Mean F1': mean_f1,
+                'Std F1': std_f1,
             })
 
     if not rows:
@@ -232,17 +252,55 @@ def analyze_class_balance():
     df['Scenario'] = df['Scenario'].astype(str).str.upper()
 
     print("=" * 80)
-    print("ANÁLISE DE BALANCEAMENTO POR ATIVIDADE (recall por classe)\n")
-    # ordenar por mean alto e std baixo
-    df_sorted = df.sort_values(by=['Mean Recall', 'Std Recall'], ascending=[False, True])
-    print(df_sorted.to_string(index=False, formatters={'Mean Recall': lambda x: f"{x:.4f}", 'Std Recall': lambda x: f"{x:.4f}"}))
+    print("ANÁLISE DE BALANCEAMENTO POR ATIVIDADE (Recall, Precision, F1-Score)\n")
+    # ordenar por F1-score médio alto e std baixo
+    df_sorted = df.sort_values(by=['Mean F1', 'Std F1'], ascending=[False, True])
+    print(df_sorted.to_string(
+        index=False, 
+        formatters={
+            'Mean Recall': lambda x: f"{x:.4f}",
+            'Std Recall': lambda x: f"{x:.4f}",
+            'Mean Precision': lambda x: f"{x:.4f}",
+            'Std Precision': lambda x: f"{x:.4f}",
+            'Mean F1': lambda x: f"{x:.4f}",
+            'Std F1': lambda x: f"{x:.4f}"
+        }
+    ))
     print()
 
-    best = df_sorted.iloc[0]
-    print("Melhor equilíbrio:")
-    print(f"{best['Data Type']} | {best['Split']} | {best['Scenario']} -> Mean Recall={best['Mean Recall']:.4f}, Std={best['Std Recall']:.4f}")
+    # Melhor por F1-score
+    best_f1 = df_sorted.iloc[0]
+    print("Melhor modelo por F1-Score:")
+    print(f"{best_f1['Data Type']} | {best_f1['Split']} | {best_f1['Scenario']}")
+    print(f"F1-Score: {best_f1['Mean F1']:.4f} (Std: {best_f1['Std F1']:.4f})")
+    print(f"Recall: {best_f1['Mean Recall']:.4f} (Std: {best_f1['Std Recall']:.4f})")
+    print(f"Precision: {best_f1['Mean Precision']:.4f} (Std: {best_f1['Std Precision']:.4f})")
+    print()
 
-
+    # Ranking por métrica individual
+    print("=" * 80)
+    print("MELHOR MODELO POR CADA METRICA:\n")
+    
+    best_recall_idx = df['Mean Recall'].idxmax()
+    best_recall = df.loc[best_recall_idx]
+    print(f"Maior Recall (media): {best_recall['Data Type']} | {best_recall['Split']} | {best_recall['Scenario']}")
+    print(f"Recall: {best_recall['Mean Recall']:.4f} (Std: {best_recall['Std Recall']:.4f})")
+    print(f"Precision: {best_recall['Mean Precision']:.4f}")
+    print(f"F1-Score: {best_recall['Mean F1']:.4f}\n")
+    
+    best_precision_idx = df['Mean Precision'].idxmax()
+    best_precision = df.loc[best_precision_idx]
+    print(f"Maior Precision (média): {best_precision['Data Type']} | {best_precision['Split']} | {best_precision['Scenario']}")
+    print(f"Precision: {best_precision['Mean Precision']:.4f} (Std: {best_precision['Std Precision']:.4f})")
+    print(f"Recall: {best_precision['Mean Recall']:.4f}")
+    print(f"F1-Score: {best_precision['Mean F1']:.4f}\n")
+    
+    best_f1_idx = df['Mean F1'].idxmax()
+    best_f1_model = df.loc[best_f1_idx]
+    print(f"Maior F1-Score (média): {best_f1_model['Data Type']} | {best_f1_model['Split']} | {best_f1_model['Scenario']}")
+    print(f"F1-Score: {best_f1_model['Mean F1']:.4f} (Std: {best_f1_model['Std F1']:.4f})")
+    print(f"Recall: {best_f1_model['Mean Recall']:.4f}")
+    print(f"Precision: {best_f1_model['Mean Precision']:.4f}\n")
 
 if __name__ == "__main__":
     compare_k_values()

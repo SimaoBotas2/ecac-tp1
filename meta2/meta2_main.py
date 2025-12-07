@@ -15,7 +15,7 @@ from meta2.smote import meta2_balance
 from meta2.embeddings.embeddings_extractor import extract_embeddings_dataset
 from meta2.embeddings.embeddings_extractor import save_embeddings_to_csv
 from meta2.splits import data_splitter, scenario_builder
-from meta2.bonus.lightgbm import run_lightgbm_bonus
+#from meta2.bonus.lightgbm import run_lightgbm_bonus
 from meta2.bonus.smote_balancer import balance_scenario_with_smote
 from models.knn import KNNClassifier
 from utils.progress import print_section
@@ -50,7 +50,7 @@ activities = np.array([], dtype=int)
 participant_selected = 3
 sensors_selected = [1, 2, 3, 4, 5]
 all_participants = list(range(15))
-SPLIT_RANDOM_STATE = 69
+SPLIT_RANDOM_STATE = 6700
 
 # ======================================================================
 # 1 — CARREGAR DADOS E FILTRAR APENAS ATIVIDADES 1–7
@@ -58,7 +58,7 @@ SPLIT_RANDOM_STATE = 69
 
 print("\n--- Carregar dados ---")
 
-dados = data_treatment.get_data(participant_selected, sensors_selected)  # type: ignore[arg-type]
+dados = data_treatment.get_data(all_participants, sensors_selected)  # type: ignore[arg-type]
 activities = dados[:, 11].astype(int)
 
 mask_1_to_7 = activities <= 7
@@ -71,7 +71,6 @@ print(f"Após filtrar atividades 1-7: {dados.shape}")
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 
-"""
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
     try:
@@ -91,7 +90,6 @@ else:
     else:
         print("Sem amostras após filtragem.")
 
-"""
 
 # ======================================================================
 #  1.2 — SMOTE
@@ -187,6 +185,8 @@ except Exception as e:
 # ======================================================================
 # 3 — DATA SPLITTING (WITHIN + BETWEEN SUBJECT)
 # ======================================================================
+
+
 """
 3.1 - TVT 60-20-20 within subject
 3.2 - 9 train / 3 val / 3 test between subjects
@@ -196,7 +196,7 @@ except Exception as e:
       b) PCA → 90%
       c) ReliefF → top 15
 """
-"""
+
 
 print_section("3.1 / 3.2 - Data Splitting (Features & Embeddings)")
 try:
@@ -218,7 +218,7 @@ try:
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
 
-"""
+
 
 # ======================================================================
 # 4 — EXEMPLO: TREINAR UM ÚNICO MODELO kNN
@@ -333,7 +333,7 @@ try:
          data_type='features',
          split_type='within',
          scenario='all',
-         k=10,
+         k=3,
     )
 
 except Exception as e:
@@ -342,6 +342,9 @@ except Exception as e:
     traceback.print_exc()
 
 
+
+
+"""
 # ======================================================================
 # 7 — (BONUS)
 # ======================================================================
@@ -362,7 +365,7 @@ BONUS_SMOTE_K_NEIGHBORS = 5
 BONUS_BALANCED_SCENARIO_NAME = "all_smote"
 
 BONUS_LIGHTGBM_ENABLED = False
-BONUS_OPTUNA_TRIALS = 20
+BONUS_OPTUNA_TRIALS = 20 
 BONUS_OPTUNA_TIMEOUT = None  # segundos (None = sem limite)
 BONUS_MODEL_NAME = "lightgbm_bonus.txt"
 BONUS_BALANCE_WITH_SMOTE = False
@@ -420,4 +423,6 @@ if BONUS_LIGHTGBM_ENABLED:
         )
     except Exception as bonus_error:
         print(f"[BONUS][LightGBM] Erro: {bonus_error}")
+
+"""
 
