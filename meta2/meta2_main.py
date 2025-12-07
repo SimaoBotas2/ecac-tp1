@@ -72,7 +72,7 @@ print(f"Após filtrar atividades 1-7: {dados.shape}")
 # 1.1 — ANALISAR BALANCEAMENTO DO DATASET
 # ======================================================================
 """
-
+"""
 print("\n=== 1.1 - Balanceamento das atividades ===")
 if META2_FEATURES_FILE.exists():
     try:
@@ -91,7 +91,7 @@ else:
         print(f"  Imbalance ratio (max/min): {ratio:.2f}")
     else:
         print("Sem amostras após filtragem.")
-"""
+
 """
 # ======================================================================
 #  1.2 — SMOTE
@@ -197,7 +197,7 @@ Task 3.4 - Prepare datasets:
       a) full
       b) PCA → 90%
       c) ReliefF → top 15
-"""
+
 
 print_section("3.1 / 3.2 - Data Splitting (Features & Embeddings)")
 try:
@@ -218,7 +218,7 @@ try:
     print("[META2][3.4] Cenários guardados em data/processed/scenarios.")
 except Exception as e:
     print(f"[META2][3.x] Erro ao gerar splits: {e}")
-
+"""
 
 # ======================================================================
 # 4 — EXEMPLO: TREINAR UM ÚNICO MODELO kNN
@@ -360,20 +360,19 @@ except Exception as e:
 # ======================================================================
 BONUS_DATA_TYPE = "features"
 BONUS_SPLIT_TYPE = "within"
-BONUS_SCENARIO = "all"
+BONUS_SCENARIO = "all_smote"
 
-BONUS_SMOTE_ENABLED = True
+BONUS_SMOTE_ENABLED = False
 BONUS_SMOTE_TARGET_RATIO = 0.75  # 75% do maior count
 BONUS_SMOTE_MIN_SAMPLES = None   # Define um mínimo absoluto, se necessário
 BONUS_SMOTE_RANDOM_STATE = 42
 BONUS_SMOTE_K_NEIGHBORS = 5
 BONUS_BALANCED_SCENARIO_NAME = "all_smote"
 
-BONUS_LIGHTGBM_ENABLED = False
+BONUS_LIGHTGBM_ENABLED = True
 BONUS_OPTUNA_TRIALS = 20
 BONUS_OPTUNA_TIMEOUT = None  # segundos (None = sem limite)
-BONUS_MODEL_NAME = "lightgbm_bonus.txt"
-BONUS_BALANCE_WITH_SMOTE = False
+BONUS_MODEL_NAME = "lightgbm_bonus_smote.txt"
 
 
 # ======================================================================
@@ -408,20 +407,7 @@ if BONUS_LIGHTGBM_ENABLED:
     print_section("BONUS - LightGBM + Optuna")
     try:
         scenario_for_bonus = BONUS_SCENARIO
-        if BONUS_BALANCE_WITH_SMOTE:
-            balance_result = balance_scenario_with_smote(
-                data_processed_path=DATA_PROCESSED,
-                data_type=BONUS_DATA_TYPE,
-                split_type=BONUS_SPLIT_TYPE,
-                scenario=BONUS_SCENARIO,
-                target_min_ratio=BONUS_SMOTE_TARGET_RATIO,
-                min_target_samples=BONUS_SMOTE_MIN_SAMPLES,
-                output_scenario_name=BONUS_BALANCED_SCENARIO_NAME or f"{BONUS_SCENARIO}_smote",
-                random_state=BONUS_SMOTE_RANDOM_STATE,
-                k_neighbors=BONUS_SMOTE_K_NEIGHBORS,
-            )
-            scenario_for_bonus = balance_result["scenario_name"]
-        
+                
         bonus_lightgbm_results = run_lightgbm_bonus(
             data_processed_path=DATA_PROCESSED,
             data_type=BONUS_DATA_TYPE,
