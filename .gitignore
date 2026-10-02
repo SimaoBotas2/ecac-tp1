@@ -9,3 +9,5 @@ data/processed/
 
 meta2/results/
 models/trained_models/
+enunciados/
+*.pkl
