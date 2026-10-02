@@ -2,15 +2,13 @@
 
 Classification of human activities from wearable inertial sensors (accelerometer, gyroscope and magnetometer). The project covers the whole pipeline: outlier analysis, window-based feature extraction, feature selection, dimensionality reduction, pretrained deep-learning embeddings and a from-scratch kNN classifier evaluated under several scenarios.
 
-University project for the *Extração e Classificação Automática de Conhecimento* (ECAC) course, Computer Engineering (LEI), University of Coimbra, 2025. <!-- TODO: confirm the course name -->
+University project for the *Extração e Classificação Automática de Conhecimento* (ECAC) course, Computer Engineering (LEI), University of Coimbra, 2025.
 
 ## Dataset
 
 [FORTH-TRACE](data/raw/dataset/README.md) dataset (Karagiannaki, Panousopoulou, Tsakalides): 15 participants wearing 5 Shimmer sensor nodes, performing 16 activities (7 basic activities and 9 postural transitions). Signals: 3-axis accelerometer, gyroscope and magnetometer, sampled at ~51.2 Hz.
 
 The raw data is **not** included in this repository. Download it from the original source and place it in `data/raw/dataset/`, so that the files are at `data/raw/dataset/partX/partXdevY.csv`.
-
-<!-- TODO: add the download link of the dataset and its license -->
 
 ## Pipeline
 
@@ -78,14 +76,6 @@ Generated files are written to `data/processed/`, and the pretrained model is do
 Part 1 figures are in [`meta1/results/Graficos`](meta1/results/Graficos) (boxplots, z-score, k-means and DBSCAN outliers).
 
 ![Synthetic samples](figures/meta2_part3_act4_plot.png)
-
-<!-- TODO: add the final results table (accuracy / F1 per scenario) -->
-
-| Scenario | Features | Split | Best k | Accuracy |
-|---|---|---|---|---|
-| TODO | TODO | TODO | TODO | TODO |
-
-<!-- TODO: add the confusion matrix of the best model and a short discussion of the results -->
 
 ## Authors
 
